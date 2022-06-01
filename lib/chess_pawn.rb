@@ -13,7 +13,9 @@ class Pawn < Piece
   end
 
   def move
-    # TODO: Complete (watch out for double_step variable)
+    new_pos = valid_pos_input(board)
+    @double_step = new_pos == double_step_pos
+    @position = new_pos
   end
 
   private
