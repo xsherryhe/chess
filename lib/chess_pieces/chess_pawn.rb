@@ -41,15 +41,14 @@ class Pawn < Piece
   end
 
   def can_capture(board)
-    board.any? { |piece| diagonal_pos.include?(piece.position) } ||
-      can_capture_en_passant(board)
+    board.any? do |piece|
+      opponent(piece) && diagonal_pos.include?(piece.position)
+    end || can_capture_en_passant(board)
   end
 
   def can_capture_en_passant(board)
     board.any? do |piece|
-      piece.is_a(Pawn) &&
-        piece.player_index == player_index ^ 1 &&
-        piece.double_step &&
+      piece.is_a(Pawn) && opponent(piece) && piece.double_step &&
         (piece.position.first - position.first).abs == 1
     end
   end

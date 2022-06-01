@@ -31,4 +31,8 @@ class Piece
     col, row = input.upcase.chars
     [col.ord - 65, row.to_i - 1]
   end
+
+  def opponent(piece)
+    piece.player_index == player_index ^ 1
+  end
 end
