@@ -1,5 +1,5 @@
 class Piece
-  attr_reader :position
+  attr_reader :position, :player_index
 
   def initialize(player_index)
     @player_index = player_index
@@ -28,7 +28,7 @@ class Piece
   end
 
   def to_pos(input)
-    x, y = input.upcase.chars
-    [x.ord - 65, y.to_i - 1]
+    col, row = input.upcase.chars
+    [col.ord - 65, row.to_i - 1]
   end
 end
