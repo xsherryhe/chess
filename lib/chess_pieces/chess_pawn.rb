@@ -12,7 +12,7 @@ class Pawn < Piece
     @base_moves = [[0, @vertical_dir]]
   end
 
-  def move
+  def move(board)
     new_pos = valid_pos_input(board)
     @double_step = new_pos == double_step_pos
     @position = new_pos
