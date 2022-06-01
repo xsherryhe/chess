@@ -20,20 +20,21 @@ class Pawn < Piece
 
   private
 
-  def legal_next_pos(board)
-    legal_pos = base_pos.reject do |pos|
+  def legal_next_positions(board)
+    legal_positions = base_positions.reject do |pos|
       board.any? { |piece| piece.position == pos }
     end
 
-    legal_pos += diagonal_pos if can_capture(board)
-    legal_pos << double_step_pos if in_starting_position
-    legal_pos
+    legal_positions += diagonal_positions if can_capture(board)
+    legal_positions << double_step_pos if in_starting_pos
+    legal_positions
   end
 
-  def diagonal_pos
-    [-1, 1].map do |horiz_dir|
+  def diagonal_positions
+    positions = [-1, 1].map do |horiz_dir|
       [position.first + horiz_dir, position.last + @vertical_dir]
     end
+    in_range(positions)
   end
 
   def double_step_pos
@@ -42,7 +43,7 @@ class Pawn < Piece
 
   def can_capture(board)
     board.any? do |piece|
-      opponent(piece) && diagonal_pos.include?(piece.position)
+      opponent(piece) && diagonal_positions.include?(piece.position)
     end || can_capture_en_passant(board)
   end
 
@@ -53,7 +54,7 @@ class Pawn < Piece
     end
   end
 
-  def in_starting_position
+  def in_starting_pos
     position.last == (player_index.zero? ? 1 : 6)
   end
 end

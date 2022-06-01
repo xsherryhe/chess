@@ -12,7 +12,7 @@ class Piece
   private
 
   def valid_pos_input(board)
-    until legal_next_pos(board).include?(new_pos)
+    until legal_next_positions(board).include?(new_pos)
       puts "Please enter a position for the #{@name} " \
            'that can be reached with a legal move.'
       new_pos = to_pos(gets.chomp)
@@ -20,10 +20,16 @@ class Piece
     new_pos
   end
 
-  def base_pos
-    @base_moves.filter_map do |move|
-      new_pos = [position.first + move.first, position.last + move.last]
-      new_pos if new_pos.all? { |dir| dir.between?(0, 7) }
+  def base_positions
+    positions = @base_moves.map do |move|
+      [position.first + move.first, position.last + move.last]
+    end
+    in_range(positions)
+  end
+
+  def in_range(positions)
+    positions.select do |pos|
+      pos.all? { |dir| dir.between?(0, 7) }
     end
   end
 
