@@ -4,9 +4,8 @@ class Pawn < Piece
   attr_reader :double_step
 
   def initialize(player_index, starting_position)
-    super(player_index)
+    super
     @name = 'pawn'
-    @position = starting_position
     @vertical_dir = player_index.zero? ? 1 : -1
     @double_step = false
     @base_moves = [[0, @vertical_dir]]

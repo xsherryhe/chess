@@ -1,8 +1,9 @@
 class Piece
   attr_reader :position, :player_index
 
-  def initialize(player_index)
+  def initialize(player_index, starting_position)
     @player_index = player_index
+    @position = starting_position
   end
 
   def move(board)
