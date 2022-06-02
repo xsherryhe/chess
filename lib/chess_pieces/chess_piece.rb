@@ -13,11 +13,13 @@ class Piece
   private
 
   def valid_pos_input(board)
-    puts "Please enter the square to move the #{@name}."
+    puts "Please enter the square to move the #{@name}, "\
+         'using the format LETTER + NUMBER (e.g., "A1").'
     new_pos = to_pos(gets.chomp)
     until legal_next_positions(board).include?(new_pos)
       puts "Please enter a square for the #{@name} " \
-           'that can be reached with a legal move.'
+           'that can be reached with a legal move. ' \
+           'Please use the format LETTER + NUMBER (e.g., "A1").'
       new_pos = to_pos(gets.chomp)
     end
     new_pos
@@ -37,8 +39,14 @@ class Piece
   end
 
   def to_pos(input)
+    return unless input.length == 2
+
     col, row = input.upcase.chars
     [col.ord - 65, row.to_i - 1]
+  end
+
+  def player(piece)
+    piece.player_index == player_index
   end
 
   def opponent(piece)

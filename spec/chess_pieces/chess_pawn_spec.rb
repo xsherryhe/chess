@@ -36,7 +36,7 @@ describe Pawn do
 
       10.times do
         it 'prompts the user to enter a position' do
-          expect(pawn).to receive(:puts).with('Please enter the square to move the pawn.')
+          expect(pawn).to receive(:puts).with('Please enter the square to move the pawn, using the format LETTER + NUMBER (e.g., "A1").')
           pawn.move([])
         end
 
@@ -58,7 +58,7 @@ describe Pawn do
           end
           expect(pawn)
             .to receive(:puts)
-            .with('Please enter a square for the pawn that can be reached with a legal move.')
+            .with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
           pawn.move([])
         end
@@ -114,7 +114,7 @@ describe Pawn do
         10.times do
           it 'prompts the user to enter a different position' do
             allow(pawn).to receive(:gets).and_return(diagonal_position_input, legal_position_input)
-            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move.')
+            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             pawn.move([uncapturable_piece])
           end
         end
@@ -151,7 +151,7 @@ describe Pawn do
             pawn.instance_variable_set(:@position, [random_position.first, (2..5).to_a.sample])
             legal_input = ('a'..'h').to_a[pawn.position.first] + (pawn.position.last + (player_index.zero? ? 1 : -1) + 1).to_s
             allow(pawn).to receive(:gets).and_return(double_step_position_input, legal_input)
-            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move.')
+            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             pawn.move([])
           end
         end
