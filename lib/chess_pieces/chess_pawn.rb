@@ -25,7 +25,9 @@ class Pawn < Piece
       board.any? { |piece| piece.position == pos }
     end
 
-    legal_positions += diagonal_positions if can_capture(board)
+    diagonal_positions.each do |diag_pos|
+      legal_positions << diag_pos if can_capture(diag_pos, board)
+    end
     legal_positions << double_step_pos if in_starting_pos
     legal_positions
   end
@@ -41,17 +43,17 @@ class Pawn < Piece
     [position.first, position.last + 2 * @vertical_dir]
   end
 
-  def can_capture(board)
+  def can_capture(diag_pos, board)
     board.any? do |piece|
-      opponent(piece) && diagonal_positions.include?(piece.position)
-    end || can_capture_en_passant(board)
+      opponent(piece) &&
+        (piece.position == diag_pos || can_capture_en_passant(piece, diag_pos))
+    end
   end
 
-  def can_capture_en_passant(board)
-    board.any? do |piece|
-      piece.is_a(Pawn) && opponent(piece) && piece.double_step &&
-        (piece.position.first - position.first).abs == 1
-    end
+  def can_capture_en_passant(piece, diag_pos)
+    piece.is_a?(Pawn) && piece.double_step &&
+      piece.position.first == diag_pos.first &&
+      piece.position.last == position.last
   end
 
   def in_starting_pos
