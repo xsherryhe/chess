@@ -10,11 +10,10 @@ describe Knight do
   describe '#move' do
     let(:legal_position) do
       moves = [[-1, -2], [-1, 2], [1, -2], [1, 2], [-2, -1], [-2, 1], [2, -1], [2, 1]]
-      position = moves.sample.map.with_index { |change, i| random_position[i] + change }
-      until position.all? { |dir| dir.between?(0, 7) }
+      loop do
         position = moves.sample.map.with_index { |change, i| random_position[i] + change }
+        return position if position.all? { |dir| dir.between?(0, 7) }
       end
-      position
     end
     let(:legal_position_input) do
       ('a'..'h').to_a[legal_position.first] + (legal_position.last + 1).to_s
