@@ -72,18 +72,52 @@ describe Bishop do
     end
 
     context 'when there is a piece in the path of the bishop' do
-      context 'when a position before the occupied position is entered' do
-        it "allows the pawn's position to be changed" do
+      let(:opponent_position) do
+        loop do
+          distance = rand(2..7)
+          position = [random_position.first + distance * [1, -1].sample,
+                      random_position.last + distance * [1, -1].sample]
+          return position if position.all? { |dir| dir.between?(2, 5) }
         end
+      end
+      let(:board) { [instance_double(Piece, player_index: player_index ^ 1, position: opponent_position)] }
+      let(:before_position) do
+        [random_position.first + (opponent_position.first > random_position.first ? 1 : -1),
+         random_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
+      end
+      let(:before_position_input) do
+        ('a'..'h').to_a[before_position.first] + (before_position.last + 1).to_s
+      end
+      let(:after_position) do
+        [opponent_position.first + (opponent_position.first > random_position.first ? 1 : -1),
+         opponent_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
+      end
+      let(:after_position_input) do
+        ('a'..'h').to_a[after_position.first] + (after_position.last + 1).to_s
+      end
+
+      before do
+        allow(bishop).to receive(:gets).and_return(after_position_input, before_position_input)
       end
 
       context 'when a position beyond the occupied position is entered' do
         it 'prompts the user to enter a different position' do
+          expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+          bishop.move(board)
+        end
+      end
+
+      context 'when a position before the occupied position is entered' do
+        10.times do
+          it "allows the bishop's position to be changed" do
+            bishop.move(board)
+            expect(bishop.position).to eq(before_position)
+          end
         end
       end
 
       context "when the occupied position is entered and the piece is the opponent's" do
-        it "allows the pawn's position to be changed" do
+        it "allows the bishop's position to be changed" do
         end
       end
 
