@@ -74,7 +74,7 @@ describe Bishop do
     context 'when there is a piece in the path of the bishop' do
       let(:opponent_position) do
         loop do
-          distance = rand(2..7)
+          distance = rand(2..5)
           position = [random_position.first + distance * [1, -1].sample,
                       random_position.last + distance * [1, -1].sample]
           return position if position.all? { |dir| dir.between?(2, 5) }
@@ -83,8 +83,8 @@ describe Bishop do
       let(:blocking_piece) { instance_double(Piece, position: opponent_position) }
       let(:board) { [blocking_piece] }
       let(:before_position) do
-        [random_position.first + (opponent_position.first > random_position.first ? 1 : -1),
-         random_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
+        [random_position.first + (opponent_position.first <=> random_position.first),
+         random_position.last + (opponent_position.last <=> random_position.last)]
       end
       let(:before_position_input) do
         ('a'..'h').to_a[before_position.first] + (before_position.last + 1).to_s
@@ -92,8 +92,8 @@ describe Bishop do
 
       context 'when positions in the path are entered' do
         let(:after_position) do
-          [opponent_position.first + (opponent_position.first > random_position.first ? 1 : -1),
-           opponent_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
+          [opponent_position.first + (opponent_position.first <=> random_position.first),
+           opponent_position.last + (opponent_position.last <=> random_position.last)]
         end
         let(:after_position_input) do
           ('a'..'h').to_a[after_position.first] + (after_position.last + 1).to_s
