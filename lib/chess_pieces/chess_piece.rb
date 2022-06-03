@@ -26,10 +26,9 @@ class Piece
   end
 
   def base_positions
-    positions = @base_moves.map do |move|
+    @base_moves.map do |move|
       [position.first + move.first, position.last + move.last]
     end
-    in_range(positions)
   end
 
   def in_range(positions)

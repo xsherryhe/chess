@@ -20,7 +20,7 @@ class Pawn < Piece
   private
 
   def legal_next_positions(board)
-    legal_positions = base_positions.reject do |pos|
+    legal_positions = in_range(base_positions).reject do |pos|
       board.any? { |piece| piece.position == pos }
     end
 
