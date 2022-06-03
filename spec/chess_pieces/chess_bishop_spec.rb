@@ -80,7 +80,8 @@ describe Bishop do
           return position if position.all? { |dir| dir.between?(2, 5) }
         end
       end
-      let(:board) { [instance_double(Piece, player_index: player_index ^ 1, position: opponent_position)] }
+      let(:blocking_piece) { instance_double(Piece, position: opponent_position) }
+      let(:board) { [blocking_piece] }
       let(:before_position) do
         [random_position.first + (opponent_position.first > random_position.first ? 1 : -1),
          random_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
@@ -88,41 +89,65 @@ describe Bishop do
       let(:before_position_input) do
         ('a'..'h').to_a[before_position.first] + (before_position.last + 1).to_s
       end
-      let(:after_position) do
-        [opponent_position.first + (opponent_position.first > random_position.first ? 1 : -1),
-         opponent_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
-      end
-      let(:after_position_input) do
-        ('a'..'h').to_a[after_position.first] + (after_position.last + 1).to_s
-      end
 
-      before do
-        allow(bishop).to receive(:gets).and_return(after_position_input, before_position_input)
-      end
-
-      context 'when a position beyond the occupied position is entered' do
-        it 'prompts the user to enter a different position' do
-          expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-          bishop.move(board)
+      context 'when positions in the path are entered' do
+        let(:after_position) do
+          [opponent_position.first + (opponent_position.first > random_position.first ? 1 : -1),
+           opponent_position.last + (opponent_position.last > random_position.last ? 1 : -1)]
         end
-      end
+        let(:after_position_input) do
+          ('a'..'h').to_a[after_position.first] + (after_position.last + 1).to_s
+        end
 
-      context 'when a position before the occupied position is entered' do
-        10.times do
-          it "allows the bishop's position to be changed" do
-            bishop.move(board)
-            expect(bishop.position).to eq(before_position)
+        before do
+          allow(blocking_piece).to receive(:player_index).and_return(rand(2))
+          allow(bishop).to receive(:gets).and_return(after_position_input, before_position_input)
+        end
+
+        context 'when a position after the occupied position is entered' do
+          10.times do
+            it 'prompts the user to enter a different position' do
+              expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+              bishop.move(board)
+            end
+          end
+        end
+
+        context 'when a position before the occupied position is entered' do
+          10.times do
+            it "allows the bishop's position to be changed" do
+              bishop.move(board)
+              expect(bishop.position).to eq(before_position)
+            end
           end
         end
       end
 
-      context "when the occupied position is entered and the piece is the opponent's" do
-        it "allows the bishop's position to be changed" do
+      context 'when the occupied position is entered' do
+        let(:opponent_position_input) do
+          ('a'..'h').to_a[opponent_position.first] + (opponent_position.last + 1).to_s
         end
-      end
 
-      context "when the occupied position is entered and the piece is the player's own" do
-        it 'prompts the user to enter a different position' do
+        context "when the piece is the opponent's" do
+          10.times do
+            it "allows the bishop's position to be changed" do
+              allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
+              allow(bishop).to receive(:gets).and_return(opponent_position_input)
+              bishop.move(board)
+              expect(bishop.position).to eq(opponent_position)
+            end
+          end
+        end
+
+        context "when the piece is the player's own" do
+          10.times do
+            it 'prompts the user to enter a different position' do
+              allow(blocking_piece).to receive(:player_index).and_return(player_index)
+              allow(bishop).to receive(:gets).and_return(opponent_position_input, before_position_input)
+              expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+              bishop.move(board)
+            end
+          end
         end
       end
     end
