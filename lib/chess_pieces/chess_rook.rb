@@ -23,9 +23,7 @@ class Rook < Piece
 
   def king_to_castle(board)
     board.find do |piece|
-      piece.is_a?(King) &&
-        piece.player_index == player_index &&
-        piece.can_castle(self, board)
+      piece.is_a?(King) && player?(piece) && piece.can_castle?(self, board)
     end
   end
 

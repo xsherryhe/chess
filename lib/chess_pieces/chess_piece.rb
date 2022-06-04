@@ -52,7 +52,7 @@ class Piece
         board.any? { |piece| piece.position == pos }
       end
       pos_set[0..last_index].reject do |pos|
-        board.any? { |piece| player(piece) && piece.position == pos }
+        board.any? { |piece| player?(piece) && piece.position == pos }
       end
     end.flatten(1)
   end
@@ -64,11 +64,11 @@ class Piece
     [col.ord - 65, row.to_i - 1]
   end
 
-  def player(piece)
+  def player?(piece)
     piece.player_index == player_index
   end
 
-  def opponent(piece)
+  def opponent?(piece)
     piece.player_index == player_index ^ 1
   end
 end

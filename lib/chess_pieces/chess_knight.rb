@@ -12,7 +12,7 @@ class Knight < Piece
 
   def legal_next_positions(board)
     in_range(base_positions).reject do |pos|
-      board.any? { |piece| player(piece) && piece.position == pos }
+      board.any? { |piece| player?(piece) && piece.position == pos }
     end
   end
 end
