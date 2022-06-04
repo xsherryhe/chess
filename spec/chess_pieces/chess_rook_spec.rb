@@ -73,7 +73,7 @@ describe Rook do
     end
 
     context 'when there is a piece in the path of the rook' do
-      let(:opponent_position) do
+      let(:blocking_position) do
         loop do
           change = rand(2..5) * [1, -1].sample
           position = [[random_position.first + change, random_position.last],
@@ -84,11 +84,11 @@ describe Rook do
           return position if valid
         end
       end
-      let(:blocking_piece) { instance_double(Piece, position: opponent_position) }
+      let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
       let(:board) { [blocking_piece] }
       let(:before_position) do
-        [random_position.first + (opponent_position.first <=> random_position.first),
-         random_position.last + (opponent_position.last <=> random_position.last)]
+        [random_position.first + (blocking_position.first <=> random_position.first),
+         random_position.last + (blocking_position.last <=> random_position.last)]
       end
       let(:before_position_input) do
         ('a'..'h').to_a[before_position.first] + (before_position.last + 1).to_s
@@ -96,8 +96,8 @@ describe Rook do
 
       context 'when positions in the path are entered' do
         let(:after_position) do
-          [opponent_position.first + (opponent_position.first <=> random_position.first),
-           opponent_position.last + (opponent_position.last <=> random_position.last)]
+          [blocking_position.first + (blocking_position.first <=> random_position.first),
+           blocking_position.last + (blocking_position.last <=> random_position.last)]
         end
         let(:after_position_input) do
           ('a'..'h').to_a[after_position.first] + (after_position.last + 1).to_s
@@ -128,17 +128,17 @@ describe Rook do
       end
 
       context 'when the occupied position is entered' do
-        let(:opponent_position_input) do
-          ('a'..'h').to_a[opponent_position.first] + (opponent_position.last + 1).to_s
+        let(:blocking_position_input) do
+          ('a'..'h').to_a[blocking_position.first] + (blocking_position.last + 1).to_s
         end
 
         context "when the piece is the opponent's" do
           10.times do
             it "allows the rook's position to be changed" do
               allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
-              allow(rook).to receive(:gets).and_return(opponent_position_input)
+              allow(rook).to receive(:gets).and_return(blocking_position_input)
               rook.move(board)
-              expect(rook.position).to eq(opponent_position)
+              expect(rook.position).to eq(blocking_position)
             end
           end
         end
@@ -147,7 +147,7 @@ describe Rook do
           10.times do
             it 'prompts the user to enter a different position' do
               allow(blocking_piece).to receive(:player_index).and_return(player_index)
-              allow(rook).to receive(:gets).and_return(opponent_position_input, before_position_input)
+              allow(rook).to receive(:gets).and_return(blocking_position_input, before_position_input)
               expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
               rook.move(board)
             end
