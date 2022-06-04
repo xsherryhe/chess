@@ -6,6 +6,7 @@ describe Pawn do
     Array.new(2) { rand(1..6) }
   end
   subject(:pawn) { described_class.new(player_index, random_position) }
+  let(:random_move_num) { rand(50) }
 
   describe '#move' do
     let(:legal_position) do
@@ -37,11 +38,11 @@ describe Pawn do
       10.times do
         it 'prompts the user to enter a position' do
           expect(pawn).to receive(:puts).with('Please enter the square to move the pawn, using the format LETTER + NUMBER (e.g., "A1").')
-          pawn.move([])
+          pawn.move([], random_move_num)
         end
 
         it "changes the pawn's position to the new position" do
-          pawn.move([])
+          pawn.move([], random_move_num)
           expect(pawn.position).to eq(legal_position)
         end
       end
@@ -60,7 +61,7 @@ describe Pawn do
             .to receive(:puts)
             .with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
-          pawn.move([])
+          pawn.move([], random_move_num)
         end
       end
     end
@@ -85,7 +86,7 @@ describe Pawn do
       context 'when an opposing piece can be captured (is diagonal from the pawn)' do
         10.times do
           it "allows the pawn's position to be changed" do
-            pawn.move([instance_double(Piece, player_index: opponent_index, position: diagonal_position)])
+            pawn.move([instance_double(Piece, player_index: opponent_index, position: diagonal_position)], random_move_num)
             expect(pawn.position).to eq(diagonal_position)
           end
         end
@@ -94,9 +95,9 @@ describe Pawn do
       context 'when an opposing pawn can be captured en passant' do
         10.times do
           it "allows the pawn's position to be changed" do
-            opponent_pawn = instance_double(Pawn, player_index: opponent_index, position: adjacent_position, double_step: true)
+            opponent_pawn = instance_double(Pawn, player_index: opponent_index, position: adjacent_position, double_step: random_move_num - 1)
             allow(opponent_pawn).to receive(:is_a?).with(Pawn).and_return(true)
-            pawn.move([opponent_pawn])
+            pawn.move([opponent_pawn], random_move_num)
             expect(pawn.position).to eq(diagonal_position)
           end
         end
@@ -104,9 +105,9 @@ describe Pawn do
 
       context 'when an opposing piece cannot be captured' do
         let(:uncapturable_piece) do
-          [instance_double(Pawn, player_index: opponent_index, position: illegal_position, double_step: true),
+          [instance_double(Pawn, player_index: opponent_index, position: illegal_position, double_step: random_move_num - 1),
            instance_double(Piece, player_index: player_index, position: diagonal_position),
-           instance_double(Pawn, player_index: opponent_index, position: adjacent_position, double_step: false),
+           instance_double(Pawn, player_index: opponent_index, position: adjacent_position, double_step: random_move_num + rand(10)),
            instance_double(Piece, player_index: opponent_index, position: [diagonal_position.first - 2, diagonal_position.last])]
             .sample
         end
@@ -115,7 +116,7 @@ describe Pawn do
           it 'prompts the user to enter a different position' do
             allow(pawn).to receive(:gets).and_return(diagonal_position_input, legal_position_input)
             expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-            pawn.move([uncapturable_piece])
+            pawn.move([uncapturable_piece], random_move_num)
           end
         end
       end
@@ -131,7 +132,7 @@ describe Pawn do
         before do
           pawn.instance_variable_set(:@position, [random_position.first, [1, 6][player_index]])
           allow(pawn).to receive(:gets).and_return(double_step_position_input)
-          pawn.move([])
+          pawn.move([], random_move_num)
         end
 
         10.times do
@@ -139,8 +140,8 @@ describe Pawn do
             expect(pawn.position).to eq(double_step_position)
           end
 
-          it 'changes the double-step instance variable to be true' do
-            expect(pawn.double_step).to be true
+          it 'changes the double-step instance variable to be the move number' do
+            expect(pawn.double_step).to eq(random_move_num)
           end
         end
       end
@@ -152,21 +153,25 @@ describe Pawn do
             legal_input = ('a'..'h').to_a[pawn.position.first] + (pawn.position.last + (player_index.zero? ? 1 : -1) + 1).to_s
             allow(pawn).to receive(:gets).and_return(double_step_position_input, legal_input)
             expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-            pawn.move([])
+            pawn.move([], random_move_num)
           end
         end
       end
     end
 
     context 'when the next position is entered after a double-step' do
+      let(:double_step_move_num) do
+        move_num = rand(50) while move_num == random_move_num
+        move_num
+      end
       10.times do
-        it 'changes the double-step instance variable back to false' do
-          pawn.instance_variable_set(:@double_step, true)
+        it 'does not change the double-step instance variable' do
+          pawn.instance_variable_set(:@double_step, double_step_move_num)
           pawn.instance_variable_set(:@position, [random_position.first, [3, 4][player_index]])
           legal_input = ('a'..'h').to_a[pawn.position.first] + (pawn.position.last + (player_index.zero? ? 1 : -1) + 1).to_s
           allow(pawn).to receive(:gets).and_return(legal_input)
-          pawn.move([])
-          expect(pawn.double_step).to be false
+          pawn.move([], random_move_num)
+          expect(pawn.double_step).to eq(double_step_move_num)
         end
       end
     end

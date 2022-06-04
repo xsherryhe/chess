@@ -4,6 +4,7 @@ Basic game
   -Game class with players, board (array of pieces), play/take turn/evaluate game method
     -Option to resign or propose draw after every turn
   -Evaluate game module
+    -Evalute if pawn is in last row and must transform
     -Evaluate check
     -Evaluate checkmate (2 checks)
     -Evaluate stalemate
