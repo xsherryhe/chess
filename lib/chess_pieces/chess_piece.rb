@@ -12,14 +12,22 @@ class Piece
 
   private
 
+  def move_instruction
+    "Please enter the square to move the #{@name}, "\
+    'using the format LETTER + NUMBER (e.g., "A1").'
+  end
+
+  def error_message
+    "Please enter a square for the #{@name} " \
+    'that can be reached with a legal move. ' \
+    'Please use the format LETTER + NUMBER (e.g., "A1").'
+  end
+
   def valid_pos_input(board)
-    puts "Please enter the square to move the #{@name}, "\
-         'using the format LETTER + NUMBER (e.g., "A1").'
+    puts move_instruction
     new_pos = to_pos(gets.chomp)
     until legal_next_positions(board).include?(new_pos)
-      puts "Please enter a square for the #{@name} " \
-           'that can be reached with a legal move. ' \
-           'Please use the format LETTER + NUMBER (e.g., "A1").'
+      puts error_message
       new_pos = to_pos(gets.chomp)
     end
     new_pos
