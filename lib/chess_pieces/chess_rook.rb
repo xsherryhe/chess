@@ -31,7 +31,7 @@ class Rook < Piece
     input = valid_castle_input(board)
     return @position = to_pos(input) unless input =~ /^castle$/i
 
-    king.castle(self)
+    king.castle(self, board)
   end
 
   def castle_instruction

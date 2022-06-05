@@ -1,4 +1,5 @@
 require_relative '../../lib/chess_pieces/chess_rook.rb'
+require_relative '../../lib/chess_pieces/chess_king.rb'
 
 describe Rook do
   let(:player_index) { rand(2) }
@@ -94,6 +95,10 @@ describe Rook do
         ('a'..'h').to_a[before_position.first] + (before_position.last + 1).to_s
       end
 
+      before do
+        allow(rook).to receive(:king_to_castle).and_return(nil)
+      end
+
       context 'when positions in the path are entered' do
         let(:after_position) do
           [blocking_position.first + (blocking_position.first <=> random_position.first),
@@ -151,6 +156,58 @@ describe Rook do
               expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
               rook.move(board)
             end
+          end
+        end
+      end
+    end
+
+    context 'when a castling move is possible for the rook' do
+      let(:king_position) do
+        horiz_dir = random_position.first + rand(4..7) * [-1, 1].sample
+        horiz_dir = random_position.first + rand(4..7) * [-1, 1].sample until horiz_dir.between?(0, 7)
+        [horiz_dir, random_position.last]
+      end
+      let(:king) { instance_double(King, player_index: player_index, position: king_position) }
+      let(:board) { [king] }
+      let(:legal_position_with_king) do
+        loop do
+          change = rand(1..3) * [1, -1].sample
+          position = [[random_position.first + change, random_position.last],
+                      [random_position.first, random_position.last + change]]
+                     .sample
+          return position if position.all? { |dir| dir.between?(0, 7) }
+        end
+      end
+      let(:legal_position_with_king_input) do
+        ('a'..'h').to_a[legal_position_with_king.first] + (legal_position_with_king.last + 1).to_s
+      end
+
+      before do
+        allow(king).to receive(:is_a?).with(King).and_return(true)
+        allow(king).to receive(:can_castle?).and_return(true)
+        allow(king).to receive(:castle)
+      end
+
+      10.times do
+        it 'prompts the user with a castling-specific instruction' do
+          allow(rook).to receive(:gets).and_return(legal_position_with_king_input)
+          expect(rook).to receive(:puts).with(/Castling is also available for this rook. Please enter the word "castle" to make a castling move./)
+          rook.move(board)
+        end
+
+        it 'still allows other legal moves' do
+          allow(rook).to receive(:gets).and_return(legal_position_with_king_input)
+          rook.move(board)
+          expect(rook.position).to eq(legal_position_with_king)
+        end
+      end
+
+      context 'when the user enters a "castle" command' do
+        10.times do
+          it 'sends a message to the king to implement a castling move' do
+            allow(rook).to receive(:gets).and_return(%w[castle CASTLE].sample)
+            expect(king).to receive(:castle).with(rook, board)
+            rook.move(board)
           end
         end
       end
