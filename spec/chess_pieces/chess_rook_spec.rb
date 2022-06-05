@@ -7,6 +7,7 @@ describe Rook do
     Array.new(2) { rand(8) }
   end
   subject(:rook) { described_class.new(player_index, random_position) }
+  let(:random_move_num) { rand(50) }
 
   describe '#move' do
     let(:legal_position) do
@@ -32,9 +33,13 @@ describe Rook do
     let(:illegal_position_input) do
       ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
     end
+    let(:king) { instance_double(King, player_index: player_index, position: [-1, -1], checked?: false) }
+    let(:board) { [king] }
 
     before do
       allow(rook).to receive(:puts)
+      allow(king).to receive(:is_a?).with(King).and_return(true)
+      allow(king).to receive(:can_castle?).and_return(false)
     end
 
     context 'when a legal position is entered' do
@@ -45,11 +50,11 @@ describe Rook do
       10.times do
         it 'prompts the user to enter a position' do
           expect(rook).to receive(:puts).with('Please enter the square to move the rook, using the format LETTER + NUMBER (e.g., "A1").')
-          rook.move([])
+          rook.move(board, random_move_num)
         end
 
         it "changes the rook's position to the new position" do
-          rook.move([])
+          rook.move(board, random_move_num)
           expect(rook.position).to eq(legal_position)
         end
       end
@@ -68,7 +73,7 @@ describe Rook do
             .to receive(:puts)
             .with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
-          rook.move([])
+          rook.move(board, random_move_num)
         end
       end
     end
@@ -86,7 +91,7 @@ describe Rook do
         end
       end
       let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
-      let(:board) { [blocking_piece] }
+      let(:board) { [blocking_piece, king] }
       let(:before_position) do
         [random_position.first + (blocking_position.first <=> random_position.first),
          random_position.last + (blocking_position.last <=> random_position.last)]
@@ -117,7 +122,7 @@ describe Rook do
           10.times do
             it 'prompts the user to enter a different position' do
               expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              rook.move(board)
+              rook.move(board, random_move_num)
             end
           end
         end
@@ -125,7 +130,7 @@ describe Rook do
         context 'when a position before the occupied position is entered' do
           10.times do
             it "allows the rook's position to be changed" do
-              rook.move(board)
+              rook.move(board, random_move_num)
               expect(rook.position).to eq(before_position)
             end
           end
@@ -142,7 +147,7 @@ describe Rook do
             it "allows the rook's position to be changed" do
               allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
               allow(rook).to receive(:gets).and_return(blocking_position_input)
-              rook.move(board)
+              rook.move(board, random_move_num)
               expect(rook.position).to eq(blocking_position)
             end
           end
@@ -154,7 +159,7 @@ describe Rook do
               allow(blocking_piece).to receive(:player_index).and_return(player_index)
               allow(rook).to receive(:gets).and_return(blocking_position_input, before_position_input)
               expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              rook.move(board)
+              rook.move(board, random_move_num)
             end
           end
         end
@@ -167,7 +172,7 @@ describe Rook do
         horiz_dir = random_position.first + rand(4..7) * [-1, 1].sample until horiz_dir.between?(0, 7)
         [horiz_dir, random_position.last]
       end
-      let(:king) { instance_double(King, player_index: player_index, position: king_position) }
+      let(:king) { instance_double(King, player_index: player_index, position: king_position, checked?: false) }
       let(:board) { [king] }
       let(:legal_position_with_king) do
         loop do
@@ -183,7 +188,6 @@ describe Rook do
       end
 
       before do
-        allow(king).to receive(:is_a?).with(King).and_return(true)
         allow(king).to receive(:can_castle?).and_return(true)
         allow(king).to receive(:castle)
       end
@@ -192,12 +196,12 @@ describe Rook do
         it 'prompts the user with a castling-specific instruction' do
           allow(rook).to receive(:gets).and_return(legal_position_with_king_input)
           expect(rook).to receive(:puts).with(/Castling is also available for this rook. Please enter the word "castle" to make a castling move./)
-          rook.move(board)
+          rook.move(board, random_move_num)
         end
 
         it 'still allows other legal moves' do
           allow(rook).to receive(:gets).and_return(legal_position_with_king_input)
-          rook.move(board)
+          rook.move(board, random_move_num)
           expect(rook.position).to eq(legal_position_with_king)
         end
       end
@@ -207,7 +211,7 @@ describe Rook do
           it 'sends a message to the king to implement a castling move' do
             allow(rook).to receive(:gets).and_return(%w[castle CASTLE].sample)
             expect(king).to receive(:castle).with(rook, board)
-            rook.move(board)
+            rook.move(board, random_move_num)
           end
         end
       end

@@ -6,6 +6,7 @@ describe Knight do
     Array.new(2) { rand(8) }
   end
   subject(:knight) { described_class.new(player_index, random_position) }
+  let(:random_move_num) { rand(50) }
 
   describe '#move' do
     let(:legal_position) do
@@ -31,6 +32,7 @@ describe Knight do
 
     before do
       allow(knight).to receive(:puts)
+      allow(knight).to receive(:player_king).and_return(instance_double(King, player_index: player_index, position: [-1, -1], checked?: false))
     end
 
     context 'when a legal position is entered' do
@@ -41,11 +43,11 @@ describe Knight do
       10.times do
         it 'prompts the user to enter a position' do
           expect(knight).to receive(:puts).with('Please enter the square to move the knight, using the format LETTER + NUMBER (e.g., "A1").')
-          knight.move([])
+          knight.move([], random_move_num)
         end
 
         it "changes the knight's position to the new position" do
-          knight.move([])
+          knight.move([], random_move_num)
           expect(knight.position).to eq(legal_position)
         end
       end
@@ -64,7 +66,7 @@ describe Knight do
             .to receive(:puts)
             .with('Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
-          knight.move([])
+          knight.move([], random_move_num)
         end
       end
     end

@@ -13,22 +13,21 @@ class Rook < Piece
     @moved = false
   end
 
-  def move(board)
+  def move(board, move_num)
     @moved = true
-    king = king_to_castle(board)
-    king ? move_with_castle(king, board) : super
+    king = king_to_castle(board, move_num)
+    king ? move_with_castle(king, board, move_num) : super
   end
 
   private
 
-  def king_to_castle(board)
-    board.find do |piece|
-      piece.is_a?(King) && player?(piece) && piece.can_castle?(self, board)
-    end
+  def king_to_castle(board, move_num)
+    king = player_king(board)
+    king if king.can_castle?(self, board, move_num)
   end
 
-  def move_with_castle(king, board)
-    input = valid_castle_input(board)
+  def move_with_castle(king, board, move_num)
+    input = valid_castle_input(board, move_num)
     return @position = to_pos(input) unless input =~ /^castle$/i
 
     king.castle(self, board)
@@ -47,11 +46,11 @@ class Rook < Piece
     error_message + "\r\n" + castle_instruction
   end
 
-  def valid_castle_input(board)
+  def valid_castle_input(board, move_num)
     puts move_with_castle_instruction
     input = gets.chomp
     until input =~ /^castle$/i ||
-          legal_next_positions(board).include?(to_pos(input))
+          legal_next_positions(board, move_num).include?(to_pos(input))
       puts error_with_castle_message
       input = gets.chomp
     end

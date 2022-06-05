@@ -8,14 +8,20 @@ class King < Piece
     @moved = false
   end
 
-  def can_castle?(rook, board)
+  def can_castle?(rook, board, move_num)
     neither_moved?(rook) &&
       same_row?(rook) &&
       empty_between?(rook, board) &&
-      path_never_checked?(rook, board)
+      path_never_checked?(rook, board, move_num)
   end
 
   def castle(rook, board); end
+
+  def checked?(pos, board, move_num)
+    board.any? do |piece|
+      piece.next_positions_with_check(board, move_num).include?(pos)
+    end
+  end
 
   private
 
@@ -35,15 +41,11 @@ class King < Piece
     end
   end
 
-  def checked?(pos, board)
-    board.any? do |piece|
-      piece.legal_next_positions(board).include?(pos)
-    end
-  end
-
-  def path_never_checked?(rook, board)
+  def path_never_checked?(rook, board, move_num)
     path = castle_path(rook)
-    (path.first..path.last).none? { |dir| checked?([dir, position.last], board) }
+    (path.first..path.last).none? do |dir|
+      checked?([dir, position.last], board, move_num)
+    end
   end
 
   def castle_path(rook)

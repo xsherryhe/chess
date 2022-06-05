@@ -17,29 +17,19 @@ class Pawn < Piece
     @position = new_pos
   end
 
-  def legal_next_positions(board, move_num)
-    legal_positions = in_range(base_positions).reject do |pos|
+  def next_positions_with_check(board, move_num)
+    next_positions = in_range(base_positions).reject do |pos|
       board.any? { |piece| piece.position == pos }
     end
 
     diagonal_positions.each do |diag_pos|
-      legal_positions << diag_pos if can_capture?(move_num, diag_pos, board)
+      next_positions << diag_pos if can_capture?(move_num, diag_pos, board)
     end
-    legal_positions << double_step_pos if in_starting_pos?
-    legal_positions
+    next_positions << double_step_pos if in_starting_pos?
+    next_positions
   end
 
   private
-
-  def valid_pos_input(board, move_num)
-    puts move_instruction
-    new_pos = to_pos(gets.chomp)
-    until legal_next_positions(board, move_num).include?(new_pos)
-      puts error_message
-      new_pos = to_pos(gets.chomp)
-    end
-    new_pos
-  end
 
   def diagonal_positions
     positions = [-1, 1].map do |horiz_dir|

@@ -28,6 +28,7 @@ describe Pawn do
 
     before do
       allow(pawn).to receive(:puts)
+      allow(pawn).to receive(:player_king).and_return(instance_double(King, player_index: player_index, position: [-1, -1], checked?: false))
     end
 
     context 'when a legal position is entered' do

@@ -6,6 +6,7 @@ describe Queen do
     Array.new(2) { rand(8) }
   end
   subject(:queen) { described_class.new(player_index, random_position) }
+  let(:random_move_num) { rand(50) }
 
   describe '#move' do
     let(:legal_position) do
@@ -37,6 +38,7 @@ describe Queen do
 
     before do
       allow(queen).to receive(:puts)
+      allow(queen).to receive(:player_king).and_return(instance_double(King, player_index: player_index, position: [-1, -1], checked?: false))
     end
 
     context 'when a legal position is entered' do
@@ -47,11 +49,11 @@ describe Queen do
       10.times do
         it 'prompts the user to enter a position' do
           expect(queen).to receive(:puts).with('Please enter the square to move the queen, using the format LETTER + NUMBER (e.g., "A1").')
-          queen.move([])
+          queen.move([], random_move_num)
         end
 
         it "changes the queen's position to the new position" do
-          queen.move([])
+          queen.move([], random_move_num)
           expect(queen.position).to eq(legal_position)
         end
       end
@@ -70,7 +72,7 @@ describe Queen do
             .to receive(:puts)
             .with('Please enter a square for the queen that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
-          queen.move([])
+          queen.move([], random_move_num)
         end
       end
     end
@@ -114,7 +116,7 @@ describe Queen do
           10.times do
             it 'prompts the user to enter a different position' do
               expect(queen).to receive(:puts).with('Please enter a square for the queen that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              queen.move(board)
+              queen.move(board, random_move_num)
             end
           end
         end
@@ -122,7 +124,7 @@ describe Queen do
         context 'when a position before the occupied position is entered' do
           10.times do
             it "allows the queen's position to be changed" do
-              queen.move(board)
+              queen.move(board, random_move_num)
               expect(queen.position).to eq(before_position)
             end
           end
@@ -139,7 +141,7 @@ describe Queen do
             it "allows the queen's position to be changed" do
               allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
               allow(queen).to receive(:gets).and_return(blocking_position_input)
-              queen.move(board)
+              queen.move(board, random_move_num)
               expect(queen.position).to eq(blocking_position)
             end
           end
@@ -151,7 +153,7 @@ describe Queen do
               allow(blocking_piece).to receive(:player_index).and_return(player_index)
               allow(queen).to receive(:gets).and_return(blocking_position_input, before_position_input)
               expect(queen).to receive(:puts).with('Please enter a square for the queen that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              queen.move(board)
+              queen.move(board, random_move_num)
             end
           end
         end

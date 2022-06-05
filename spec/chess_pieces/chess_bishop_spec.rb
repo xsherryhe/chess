@@ -1,4 +1,5 @@
 require_relative '../../lib/chess_pieces/chess_bishop.rb'
+require_relative '../../lib/chess_pieces/chess_king.rb'
 
 describe Bishop do
   let(:player_index) { rand(2) }
@@ -6,6 +7,7 @@ describe Bishop do
     Array.new(2) { rand(8) }
   end
   subject(:bishop) { described_class.new(player_index, random_position) }
+  let(:random_move_num) { rand(50) }
 
   describe '#move' do
     let(:legal_position) do
@@ -33,6 +35,7 @@ describe Bishop do
 
     before do
       allow(bishop).to receive(:puts)
+      allow(bishop).to receive(:player_king).and_return(instance_double(King, player_index: player_index, position: [-1, -1], checked?: false))
     end
 
     context 'when a legal position is entered' do
@@ -43,11 +46,11 @@ describe Bishop do
       10.times do
         it 'prompts the user to enter a position' do
           expect(bishop).to receive(:puts).with('Please enter the square to move the bishop, using the format LETTER + NUMBER (e.g., "A1").')
-          bishop.move([])
+          bishop.move([], random_move_num)
         end
 
         it "changes the bishop's position to the new position" do
-          bishop.move([])
+          bishop.move([], random_move_num)
           expect(bishop.position).to eq(legal_position)
         end
       end
@@ -66,7 +69,7 @@ describe Bishop do
             .to receive(:puts)
             .with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
-          bishop.move([])
+          bishop.move([], random_move_num)
         end
       end
     end
@@ -108,7 +111,7 @@ describe Bishop do
           10.times do
             it 'prompts the user to enter a different position' do
               expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              bishop.move(board)
+              bishop.move(board, random_move_num)
             end
           end
         end
@@ -116,7 +119,7 @@ describe Bishop do
         context 'when a position before the occupied position is entered' do
           10.times do
             it "allows the bishop's position to be changed" do
-              bishop.move(board)
+              bishop.move(board, random_move_num)
               expect(bishop.position).to eq(before_position)
             end
           end
@@ -133,7 +136,7 @@ describe Bishop do
             it "allows the bishop's position to be changed" do
               allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
               allow(bishop).to receive(:gets).and_return(blocking_position_input)
-              bishop.move(board)
+              bishop.move(board, random_move_num)
               expect(bishop.position).to eq(blocking_position)
             end
           end
@@ -145,7 +148,7 @@ describe Bishop do
               allow(blocking_piece).to receive(:player_index).and_return(player_index)
               allow(bishop).to receive(:gets).and_return(blocking_position_input, before_position_input)
               expect(bishop).to receive(:puts).with('Please enter a square for the bishop that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-              bishop.move(board)
+              bishop.move(board, random_move_num)
             end
           end
         end
