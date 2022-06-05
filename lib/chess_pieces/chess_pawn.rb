@@ -17,18 +17,6 @@ class Pawn < Piece
     @position = new_pos
   end
 
-  private
-
-  def valid_pos_input(board, move_num)
-    puts move_instruction
-    new_pos = to_pos(gets.chomp)
-    until legal_next_positions(board, move_num).include?(new_pos)
-      puts error_message
-      new_pos = to_pos(gets.chomp)
-    end
-    new_pos
-  end
-
   def legal_next_positions(board, move_num)
     legal_positions = in_range(base_positions).reject do |pos|
       board.any? { |piece| piece.position == pos }
@@ -39,6 +27,18 @@ class Pawn < Piece
     end
     legal_positions << double_step_pos if in_starting_pos?
     legal_positions
+  end
+
+  private
+
+  def valid_pos_input(board, move_num)
+    puts move_instruction
+    new_pos = to_pos(gets.chomp)
+    until legal_next_positions(board, move_num).include?(new_pos)
+      puts error_message
+      new_pos = to_pos(gets.chomp)
+    end
+    new_pos
   end
 
   def diagonal_positions
