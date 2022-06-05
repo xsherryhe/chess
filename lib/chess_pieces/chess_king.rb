@@ -15,11 +15,13 @@ class King < Piece
       path_never_checked?(rook, board, move_num)
   end
 
-  def castle(rook, board); end
+  def castle(rook, board)
+  end
 
   def checked?(pos, board, move_num)
     board.any? do |piece|
-      piece.next_positions_with_check(board, move_num).include?(pos)
+      opponent?(piece) &&
+        piece.next_positions_with_check(board, move_num).include?(pos)
     end
   end
 

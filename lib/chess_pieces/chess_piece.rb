@@ -30,17 +30,22 @@ class Piece
     'using the format LETTER + NUMBER (e.g., "A1").'
   end
 
-  def error_message
-    "Please enter a square for the #{@name} " \
+  def error_message(new_pos, board, move_num)
+    message = "Please enter a square for the #{@name} " \
     'that can be reached with a legal move. ' \
     'Please use the format LETTER + NUMBER (e.g., "A1").'
+    if next_positions_with_check(board, move_num).include?(new_pos)
+      message = "Illegal move! This move would put your king in check.\r\n" +
+                message
+    end
+    message
   end
 
   def valid_pos_input(board, move_num)
     puts move_instruction
     new_pos = to_pos(gets.chomp)
     until legal_next_positions(board, move_num).include?(new_pos)
-      puts error_message
+      puts error_message(new_pos, board, move_num)
       new_pos = to_pos(gets.chomp)
     end
     new_pos
