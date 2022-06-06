@@ -32,10 +32,7 @@ class Piece
       next_positions(board, move_num).partition do |pos|
       moved_piece = clone
       moved_piece.position = pos
-      moved_board = board.clone
-      king.checked?(king.position,
-                    moved_board - [self] + [moved_piece],
-                    move_num)
+      king.checked?(king.position, board - [self] + [moved_piece], move_num)
     end
   end
 

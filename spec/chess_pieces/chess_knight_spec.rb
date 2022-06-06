@@ -1,4 +1,5 @@
 require_relative '../../lib/chess_pieces/chess_knight.rb'
+require_relative '../../lib/chess_pieces/chess_king.rb'
 
 describe Knight do
   let(:player_index) { rand(2) }
@@ -67,6 +68,47 @@ describe Knight do
             .with('Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(illegal_inputs).times
           knight.move([], random_move_num)
+        end
+      end
+    end
+
+    context 'when there is a piece in the path of the knight' do
+      let(:blocking_position) do
+        moves = [[-1, -2], [-1, 2], [1, -2], [1, 2], [-2, -1], [-2, 1], [2, -1], [2, 1]]
+        loop do
+          position = moves.sample.map.with_index { |change, i| random_position[i] + change }
+          if position.all? { |dir| dir.between?(0, 7) } && position != legal_position
+            return position
+          end
+        end
+      end
+
+      let(:blocking_position_input) do
+        ('a'..'h').to_a[blocking_position.first] + (blocking_position.last + 1).to_s
+      end
+
+      let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
+      let(:board) { [blocking_piece] }
+
+      context "when the piece is the opponent's" do
+        10.times do
+          it "allows the knight's position to be changed" do
+            allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
+            allow(knight).to receive(:gets).and_return(blocking_position_input)
+            knight.move(board, random_move_num)
+            expect(knight.position).to eq(blocking_position)
+          end
+        end
+      end
+
+      context "when the piece is the player's own" do
+        10.times do
+          it 'prompts the user to enter a different position' do
+            allow(blocking_piece).to receive(:player_index).and_return(player_index)
+            allow(knight).to receive(:gets).and_return(blocking_position_input, legal_position_input)
+            expect(knight).to receive(:puts).with('Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            knight.move(board, random_move_num)
+          end
         end
       end
     end

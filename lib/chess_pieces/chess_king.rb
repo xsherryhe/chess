@@ -33,8 +33,7 @@ class King < Piece
 
   def checked?(pos, board, move_num)
     board.any? do |piece|
-      opponent?(piece) &&
-        piece.next_positions(board, move_num).include?(pos)
+      opponent?(piece) && piece.next_positions(board, move_num).include?(pos)
     end
   end
 
