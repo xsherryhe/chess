@@ -14,11 +14,11 @@ module Castle
     error_message + "\r\n" + castle_instruction
   end
 
-  def valid_castle_input(board, move_num)
+  def valid_castle_input
     puts move_with_castle_instruction
     input = gets.chomp
     until input =~ /^castle$/i ||
-          legal_next_positions(board, move_num).include?(to_pos(input))
+          @legal_next_positions.include?(to_pos(input))
       puts error_with_castle_message
       input = gets.chomp
     end

@@ -8,7 +8,7 @@ class Knight < Piece
     @base_moves += @base_moves.map(&:reverse)
   end
 
-  def next_positions_with_check(board, *)
+  def next_positions(board, *)
     in_range(base_positions).reject do |pos|
       board.any? { |piece| player?(piece) && piece.position == pos }
     end

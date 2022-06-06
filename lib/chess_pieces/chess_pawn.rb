@@ -12,21 +12,22 @@ class Pawn < Piece
   end
 
   def move(board, move_num)
-    new_pos = valid_pos_input(board, move_num)
+    update_next_positions(board, move_num)
+    new_pos = valid_pos_input
     @double_step = move_num if new_pos == double_step_pos
     @position = new_pos
   end
 
-  def next_positions_with_check(board, move_num)
-    next_positions = in_range(base_positions).reject do |pos|
+  def next_positions(board, move_num)
+    positions = in_range(base_positions).reject do |pos|
       board.any? { |piece| piece.position == pos }
     end
 
     diagonal_positions.each do |diag_pos|
-      next_positions << diag_pos if can_capture?(move_num, diag_pos, board)
+      positions << diag_pos if can_capture?(move_num, diag_pos, board)
     end
-    next_positions << double_step_pos if in_starting_pos?
-    next_positions
+    positions << double_step_pos if in_starting_pos?
+    positions
   end
 
   private

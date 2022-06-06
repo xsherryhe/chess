@@ -34,14 +34,15 @@ class King < Piece
   def checked?(pos, board, move_num)
     board.any? do |piece|
       opponent?(piece) &&
-        piece.next_positions_with_check(board, move_num).include?(pos)
+        piece.next_positions(board, move_num).include?(pos)
     end
   end
 
   private
 
   def move_with_castle(rooks, board, move_num)
-    input = valid_castle_input(board, move_num)
+    update_next_positions(board, move_num)
+    input = valid_castle_input
     return @position = to_pos(input) unless input =~ /^castle$/i
 
     chosen_rook = valid_rook_input(rooks)

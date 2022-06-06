@@ -29,7 +29,8 @@ class Rook < Piece
   end
 
   def move_with_castle(king, board, move_num)
-    input = valid_castle_input(board, move_num)
+    update_next_positions(board, move_num)
+    input = valid_castle_input
     return @position = to_pos(input) unless input =~ /^castle$/i
 
     king.castle(self)
