@@ -2,7 +2,7 @@ module Castle
   private
 
   def castle_instruction
-    'Castling is also available for this rook. ' \
+    "Castling is also available for this #{@name}. " \
     'Please enter the word "castle" to make a castling move.'
   end
 

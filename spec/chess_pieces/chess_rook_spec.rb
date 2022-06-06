@@ -210,7 +210,7 @@ describe Rook do
         10.times do
           it 'sends a message to the king to implement a castling move' do
             allow(rook).to receive(:gets).and_return(%w[castle CASTLE].sample)
-            expect(king).to receive(:castle).with(rook, board)
+            expect(king).to receive(:castle).with(rook)
             rook.move(board, random_move_num)
           end
         end
