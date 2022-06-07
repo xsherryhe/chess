@@ -240,8 +240,30 @@ describe King do
           end
         end
       end
+    end
+  end
 
-      # TODO: Write checked? method tests
+  describe '#checked?' do
+    context "when an opponent's piece can check the player's king" do
+      10.times do
+        it 'returns true' do
+          checking_piece = instance_double(Piece, player_index: player_index ^ 1, next_positions: [random_position])
+          result = king.checked?(random_position, [checking_piece, king], random_move_num)
+          expect(result).to be true
+        end
+      end
+    end
+
+    context "when no piece can check the player's king" do
+      10.times do
+        it 'returns false' do
+          board = [instance_double(Piece, player_index: player_index, next_positions: [random_position]),
+                   instance_double(Piece, player_index: player_index ^ 1, next_positions: []),
+                   king]
+          result = king.checked?(random_position, board, random_move_num)
+          expect(result).to be false
+        end
+      end
     end
   end
 end

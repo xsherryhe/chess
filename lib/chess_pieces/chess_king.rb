@@ -31,15 +31,15 @@ class King < Piece
     rook.position = castle_rook_position(rook)
   end
 
-  def checked?(pos, board, move_num)
-    board.any? do |piece|
-      opponent?(piece) && piece.next_positions(board, move_num).include?(pos)
-    end
-  end
-
   def next_positions(board, *)
     in_range(base_positions).reject do |pos|
       board.any? { |piece| player?(piece) && piece.position == pos }
+    end
+  end
+
+  def checked?(pos, board, move_num)
+    board.any? do |piece|
+      opponent?(piece) && piece.next_positions(board, move_num).include?(pos)
     end
   end
 
