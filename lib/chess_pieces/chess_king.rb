@@ -12,10 +12,10 @@ class King < Piece
   end
 
   def move(board, move_num)
-    @moved = true
     rooks_to_castle = board.select do |piece|
       player?(piece) && piece.is_a?(Rook) && can_castle?(piece, board, move_num)
     end
+    @moved = true
     rooks_to_castle.empty? ? super : move_with_castle(rooks_to_castle, board, move_num)
   end
 
@@ -34,6 +34,12 @@ class King < Piece
   def checked?(pos, board, move_num)
     board.any? do |piece|
       opponent?(piece) && piece.next_positions(board, move_num).include?(pos)
+    end
+  end
+
+  def next_positions(board, *)
+    in_range(base_positions).reject do |pos|
+      board.any? { |piece| player?(piece) && piece.position == pos }
     end
   end
 
@@ -80,7 +86,7 @@ class King < Piece
   end
 
   def neither_moved?(rook)
-    !rook.moved && !moved
+    !rook.moved && !@moved
   end
 
   def same_row?(rook)
@@ -88,10 +94,10 @@ class King < Piece
   end
 
   def empty_between?(rook, board)
+    start, finish = [position.first, rook.position.first].sort
     board.none? do |piece|
       piece.position.last == position.last &&
-        piece.position.first.between?(*[position.first,
-                                        rook.position.first].sort)
+        (start + 1...finish).include?(piece.position.first)
     end
   end
 
