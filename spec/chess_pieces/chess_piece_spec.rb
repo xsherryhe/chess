@@ -19,6 +19,7 @@ describe Piece do
   before do
     allow(piece).to receive(:puts)
     piece.instance_variable_set(:@name, 'piece')
+    allow(piece).to receive(:update_next_positions)
     piece.instance_variable_set(:@legal_next_positions, [legal_position])
     piece.instance_variable_set(:@illegal_check_next_positions, [])
   end
@@ -27,19 +28,36 @@ describe Piece do
     context 'while an invalid input is given' do
       10.times do
         it 'prompts the user to enter an input until a valid input is entered' do
-          allow(piece).to receive(:update_next_positions)
           invalid_count = rand(100)
           call_count = 0
-          invalid_inputs = ['Z1', 'A8', 'f23', 'b', '[0, 1]', '75']
+          invalid_inputs = ['Z1', 'A9', 'f23', 'b', '[0, 1]', '75']
           allow(piece).to receive(:gets) do
             call_count += 1
             call_count == invalid_count + 1 ? legal_position_input : invalid_inputs.sample
           end
           expect(piece)
             .to receive(:puts)
-            .with('Please enter a square for the piece that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            .with('Invalid input! Please enter a square for the piece that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
             .exactly(invalid_count).times
           piece.move([], random_move_num)
+        end
+      end
+    end
+
+    context 'when the are no legal moves to be made' do
+      before do
+        piece.instance_variable_set(:@legal_next_positions, [])
+      end
+
+      10.times do
+        it 'produces an error message' do
+          expect(piece).to receive(:puts).with('There are no legal moves for this piece. Please select a different piece to move.')
+          piece.move([], random_move_num)
+        end
+
+        it "does not change the piece's position" do
+          piece.move([], random_move_num)
+          expect(piece.position).to eq(random_position)
         end
       end
     end

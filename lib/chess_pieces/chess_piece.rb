@@ -46,13 +46,15 @@ class Piece
     'that can be reached with a legal move. ' \
     'Please use the format LETTER + NUMBER (e.g., "A1").'
     if @illegal_check_next_positions.include?(new_pos)
-      message = "Illegal move! This move would put your king in check.\r\n" +
+      message = "This move would put your king in check.\r\n" +
                 message
     end
-    message
+    (new_pos ? 'Illegal move! ' : 'Invalid input! ') + message
   end
 
   def valid_pos_input
+    return no_legal_moves if @legal_next_positions.empty?
+
     puts move_instruction
     new_pos = to_pos(gets.chomp)
     until @legal_next_positions.include?(new_pos)
@@ -60,6 +62,12 @@ class Piece
       new_pos = to_pos(gets.chomp)
     end
     new_pos
+  end
+
+  def no_legal_moves
+    puts "There are no legal moves for this #{@name}. " \
+         'Please select a different piece to move.'
+    position
   end
 
   def base_positions
@@ -78,7 +86,8 @@ class Piece
     return unless input.length == 2
 
     col, row = input.upcase.chars
-    [col.ord - 65, row.to_i - 1]
+    pos = [col.ord - 65, row.to_i - 1]
+    pos.all? { |dir| dir.between?(0, 7) } ? pos : nil
   end
 
   def player?(piece)

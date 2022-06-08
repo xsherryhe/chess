@@ -30,6 +30,7 @@ describe Knight do
     let(:illegal_position_input) do
       ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
     end
+    let(:illegal_position_message) { 'Illegal move! Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").' }
 
     before do
       allow(knight).to receive(:puts)
@@ -65,7 +66,7 @@ describe Knight do
           end
           expect(knight)
             .to receive(:puts)
-            .with('Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            .with(illegal_position_message)
             .exactly(illegal_inputs).times
           knight.move([], random_move_num)
         end
@@ -106,7 +107,7 @@ describe Knight do
           it 'prompts the user to enter a different position' do
             allow(blocking_piece).to receive(:player_index).and_return(player_index)
             allow(knight).to receive(:gets).and_return(blocking_position_input, legal_position_input)
-            expect(knight).to receive(:puts).with('Please enter a square for the knight that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            expect(knight).to receive(:puts).with(illegal_position_message)
             knight.move(board, random_move_num)
           end
         end

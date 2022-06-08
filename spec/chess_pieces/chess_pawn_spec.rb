@@ -26,6 +26,7 @@ describe Pawn do
     let(:illegal_position_input) do
       ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
     end
+    let(:illegal_position_message) { 'Illegal move! Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").' }
 
     before do
       allow(pawn).to receive(:puts)
@@ -61,7 +62,7 @@ describe Pawn do
           end
           expect(pawn)
             .to receive(:puts)
-            .with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            .with(illegal_position_message)
             .exactly(illegal_inputs).times
           pawn.move([], random_move_num)
         end
@@ -117,7 +118,7 @@ describe Pawn do
         10.times do
           it 'prompts the user to enter a different position' do
             allow(pawn).to receive(:gets).and_return(diagonal_position_input, legal_position_input)
-            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            expect(pawn).to receive(:puts).with(illegal_position_message)
             pawn.move([uncapturable_piece], random_move_num)
           end
         end
@@ -154,7 +155,7 @@ describe Pawn do
             pawn.instance_variable_set(:@position, [random_position.first, (2..5).to_a.sample])
             legal_input = ('a'..'h').to_a[pawn.position.first] + (pawn.position.last + (player_index.zero? ? 1 : -1) + 1).to_s
             allow(pawn).to receive(:gets).and_return(double_step_position_input, legal_input)
-            expect(pawn).to receive(:puts).with('Please enter a square for the pawn that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            expect(pawn).to receive(:puts).with(illegal_position_message)
             pawn.move([], random_move_num)
           end
         end

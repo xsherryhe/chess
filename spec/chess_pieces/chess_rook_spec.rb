@@ -33,6 +33,7 @@ describe Rook do
     let(:illegal_position_input) do
       ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
     end
+    let(:illegal_position_message) { 'Illegal move! Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").' }
     let(:king) { instance_double(King, player_index: player_index, position: [-1, -1], checked?: false) }
     let(:board) { [king] }
 
@@ -71,7 +72,7 @@ describe Rook do
           end
           expect(rook)
             .to receive(:puts)
-            .with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            .with(illegal_position_message)
             .exactly(illegal_inputs).times
           rook.move(board, random_move_num)
         end
@@ -121,7 +122,7 @@ describe Rook do
         context 'when a position after the occupied position is entered' do
           10.times do
             it 'prompts the user to enter a different position' do
-              expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+              expect(rook).to receive(:puts).with(illegal_position_message)
               rook.move(board, random_move_num)
             end
           end
@@ -158,7 +159,7 @@ describe Rook do
             it 'prompts the user to enter a different position' do
               allow(blocking_piece).to receive(:player_index).and_return(player_index)
               allow(rook).to receive(:gets).and_return(blocking_position_input, before_position_input)
-              expect(rook).to receive(:puts).with('Please enter a square for the rook that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+              expect(rook).to receive(:puts).with(illegal_position_message)
               rook.move(board, random_move_num)
             end
           end

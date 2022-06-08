@@ -33,6 +33,7 @@ describe King do
     let(:illegal_position_input) do
       ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
     end
+    let(:illegal_position_message) { 'Illegal move! Please enter a square for the king that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").' }
     let(:board) { [king] }
 
     before do
@@ -69,7 +70,7 @@ describe King do
           end
           expect(king)
             .to receive(:puts)
-            .with('Please enter a square for the king that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            .with(illegal_position_message)
             .exactly(illegal_inputs).times
           king.move(board, random_move_num)
         end
@@ -117,7 +118,7 @@ describe King do
           it 'prompts the user to enter a different position' do
             allow(blocking_piece).to receive(:player_index).and_return(player_index)
             allow(king).to receive(:gets).and_return(blocking_position_input, legal_position_input)
-            expect(king).to receive(:puts).with('Please enter a square for the king that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
+            expect(king).to receive(:puts).with(illegal_position_message)
             king.move(board, random_move_num)
           end
         end
