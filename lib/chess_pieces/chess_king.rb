@@ -7,6 +7,7 @@ class King < Piece
   def initialize(player_index, starting_position)
     super
     @name = 'king'
+    @symbol = ["\u2654", "\u265A"][player_index]
     @base_moves = ([-1, 0, 1].product([-1, 0, 1]) - [[0, 0]])
     @moved = false
   end
@@ -20,10 +21,8 @@ class King < Piece
   end
 
   def can_castle?(rook, board, move_num)
-    neither_moved?(rook) &&
-      same_row?(rook) &&
-      empty_between?(rook, board) &&
-      path_never_checked?(rook, board, move_num)
+    neither_moved?(rook) && same_row?(rook) &&
+      empty_between?(rook, board) && path_never_checked?(rook, board, move_num)
   end
 
   def castle(rook)

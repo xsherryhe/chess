@@ -9,16 +9,12 @@ class Game
   end
 
   def display_board
-    displayed_board = Array.new(8) do |i|
-      Array.new(8) { |j| i.even? == j.even? ? '|||' : '   ' }
-    end
-
-    row_barrier = "\r\n+#{(['---'] * 8).join('+')}+\r\n"
-    puts row_barrier +
-         displayed_board.reverse
-                        .map { |row| "|#{row.join('|')}|" }
-                        .join(row_barrier) +
-         row_barrier
+    text_board = displayed_board.map.with_index do |row, i|
+      "#{i + 1}\u23B9#{row.join}\u23B8"
+    end.reverse
+    text_board.unshift(displayed_board_top)
+    text_board.push(displayed_board_bottom)
+    puts text_board.map { |line| '     ' + line }.join("\r\n")
   end
 
   private
@@ -29,6 +25,7 @@ class Game
         Queen => [3], King => [4] }.each do |piece_class, horiz_dirs|
           insert_non_pawn_starting(horiz_dirs, piece_class, player_index)
         end
+      insert_pawn_starting(player_index)
     end
   end
 
@@ -42,6 +39,39 @@ class Game
     (0..7).each do |horiz_dir|
       @board << Pawn.new(player_index, [horiz_dir, [1, 6][player_index]])
     end
+  end
+
+  def displayed_board
+    displayed_board = Array.new(8) do |i|
+      Array.new(8) do |j|
+        square = i.even? == j.even? ? "\e[47m   \e[0m" : '   '
+        square = "\e[4m#{square}\e[24m" if i.zero?
+        square
+      end
+    end
+
+    fill_displayed_board(displayed_board)
+    displayed_board
+  end
+
+  def fill_displayed_board(displayed_board)
+    @board.each do |piece|
+      col, row = piece.position
+      filled_square = if displayed_board[row][col].include?("\e[47m")
+                        "\e[47m #{piece.symbol} \e[0m"
+                      else " #{piece.symbol} "
+                      end
+      filled_square = "\e[4m#{filled_square}\e[24m" if row.zero?
+      displayed_board[row][col] = filled_square
+    end
+  end
+
+  def displayed_board_top
+    ' ' * 2 + "\u2500" * 24
+  end
+
+  def displayed_board_bottom
+    ' ' * 2 + ('A'..'H').map { |lett| " #{lett} " }.join
   end
 end
 

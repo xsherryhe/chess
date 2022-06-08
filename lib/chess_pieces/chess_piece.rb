@@ -1,6 +1,6 @@
 class Piece
   attr_accessor :position
-  attr_reader :player_index
+  attr_reader :player_index, :symbol
 
   def initialize(player_index, starting_position)
     @player_index = player_index

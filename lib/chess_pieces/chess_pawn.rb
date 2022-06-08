@@ -6,6 +6,7 @@ class Pawn < Piece
   def initialize(player_index, starting_position)
     super
     @name = 'pawn'
+    @symbol = ["\u2659", "\u265F"][player_index]
     @vertical_dir = player_index.zero? ? 1 : -1
     @double_step = false
     @base_moves = [[0, @vertical_dir]]
