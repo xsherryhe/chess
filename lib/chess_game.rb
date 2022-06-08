@@ -10,11 +10,9 @@ class Game
 
   def display_board
     text_board = displayed_board.map.with_index do |row, i|
-      "#{i + 1} |#{row.join}|"
-    end.reverse
-    text_board.unshift(displayed_board_edge)
-    text_board += displayed_board_bottom
-    puts text_board.map { |line| '     ' + line }.join("\r\n")
+      "#{i + 1}#{row.join}"
+    end.reverse << displayed_board_letters
+    puts "\r\n" + text_board.map { |line| '     ' + line }.join("\r\n") + "\r\n"
   end
 
   private
@@ -43,7 +41,9 @@ class Game
 
   def displayed_board
     displayed_board = Array.new(8) do |i|
-      Array.new(8) { |j| i.even? == j.even? ? "\e[47m   \e[0m" : '   ' }
+      Array.new(8) do |j|
+        i.even? == j.even? ? "\e[47m   \e[0m" : "\e[103m   \e[0m"
+      end
     end
 
     fill_displayed_board(displayed_board)
@@ -56,17 +56,13 @@ class Game
       displayed_board[row][col] =
         if displayed_board[row][col].include?("\e[47m")
           "\e[47m #{piece.symbol} \e[0m"
-        else " #{piece.symbol} "
+        else "\e[103m #{piece.symbol} \e[0m"
         end
     end
   end
 
-  def displayed_board_edge
-    ' ' * 3 + '-' * 24
-  end
-
-  def displayed_board_bottom
-    [displayed_board_edge, ' ' * 3 + ('A'..'H').map { |lett| " #{lett} " }.join]
+  def displayed_board_letters
+    ' ' + ('A'..'H').map { |lett| " #{lett} " }.join
   end
 end
 
