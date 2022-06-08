@@ -10,10 +10,10 @@ class Game
 
   def display_board
     text_board = displayed_board.map.with_index do |row, i|
-      "#{i + 1}\u23B9#{row.join}\u23B8"
+      "#{i + 1} |#{row.join}|"
     end.reverse
-    text_board.unshift(displayed_board_top)
-    text_board.push(displayed_board_bottom)
+    text_board.unshift(displayed_board_edge)
+    text_board += displayed_board_bottom
     puts text_board.map { |line| '     ' + line }.join("\r\n")
   end
 
@@ -43,11 +43,7 @@ class Game
 
   def displayed_board
     displayed_board = Array.new(8) do |i|
-      Array.new(8) do |j|
-        square = i.even? == j.even? ? "\e[47m   \e[0m" : '   '
-        square = "\e[4m#{square}\e[24m" if i.zero?
-        square
-      end
+      Array.new(8) { |j| i.even? == j.even? ? "\e[47m   \e[0m" : '   ' }
     end
 
     fill_displayed_board(displayed_board)
@@ -57,21 +53,20 @@ class Game
   def fill_displayed_board(displayed_board)
     @board.each do |piece|
       col, row = piece.position
-      filled_square = if displayed_board[row][col].include?("\e[47m")
-                        "\e[47m #{piece.symbol} \e[0m"
-                      else " #{piece.symbol} "
-                      end
-      filled_square = "\e[4m#{filled_square}\e[24m" if row.zero?
-      displayed_board[row][col] = filled_square
+      displayed_board[row][col] =
+        if displayed_board[row][col].include?("\e[47m")
+          "\e[47m #{piece.symbol} \e[0m"
+        else " #{piece.symbol} "
+        end
     end
   end
 
-  def displayed_board_top
-    ' ' * 2 + "\u2500" * 24
+  def displayed_board_edge
+    ' ' * 3 + '-' * 24
   end
 
   def displayed_board_bottom
-    ' ' * 2 + ('A'..'H').map { |lett| " #{lett} " }.join
+    [displayed_board_edge, ' ' * 3 + ('A'..'H').map { |lett| " #{lett} " }.join]
   end
 end
 
