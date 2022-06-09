@@ -21,9 +21,9 @@ class Game
   def play
     until @game_over
       display_board
-      evaluate_check
+      display_check_state
       take_turn
-      evaluate_game_conditions
+      display_mate_state
     end
   end
 

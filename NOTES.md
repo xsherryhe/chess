@@ -6,7 +6,7 @@ Basic game
   -Evaluate game module
     -Evalute if pawn is in last row and must transform
     -Evaluate check
-    -Evaluate checkmate (2 checks)
+    -Evaluate checkmate
     -Evaluate stalemate
     -Evaluate special game end conditions
       -Repetition of moves more than 3 times (player to move claims draw)
