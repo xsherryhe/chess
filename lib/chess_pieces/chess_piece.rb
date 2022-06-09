@@ -8,8 +8,19 @@ class Piece
   end
 
   def move(board, move_num)
-    update_next_positions(board, move_num)
-    @position = valid_pos_input
+    @position = valid_pos_input(board, move_num)
+  end
+
+  def legal_next_positions(board, move_num)
+    king = player_king(board)
+    @illegal_check_next_positions, legal_next_positions =
+      next_positions(board, move_num).partition do |pos|
+      moved_piece = clone
+      moved_piece.position = pos
+      king.checked?((moved_piece.is_a?(King) ? moved_piece : king).position,
+                    board - [self] + [moved_piece], move_num)
+    end
+    legal_next_positions
   end
 
   def next_positions(board, *)
@@ -26,16 +37,6 @@ class Piece
 
   private
 
-  def update_next_positions(board, move_num)
-    king = player_king(board)
-    @illegal_check_next_positions, @legal_next_positions =
-      next_positions(board, move_num).partition do |pos|
-      moved_piece = clone
-      moved_piece.position = pos
-      king.checked?(king.position, board - [self] + [moved_piece], move_num)
-    end
-  end
-
   def move_instruction
     "Please enter the square to move the #{@name}, "\
     'using the format LETTER + NUMBER (e.g., "A1").'
@@ -46,28 +47,20 @@ class Piece
     'that can be reached with a legal move. ' \
     'Please use the format LETTER + NUMBER (e.g., "A1").'
     if @illegal_check_next_positions.include?(new_pos)
-      message = "This move would put your king in check.\r\n" +
+      message = "This move would leave your king in check.\r\n" +
                 message
     end
     (new_pos ? 'Illegal move! ' : 'Invalid input! ') + message
   end
 
-  def valid_pos_input
-    return no_legal_moves if @legal_next_positions.empty?
-
+  def valid_pos_input(board, move_num)
     puts move_instruction
     new_pos = to_pos(gets.chomp)
-    until @legal_next_positions.include?(new_pos)
+    until legal_next_positions(board, move_num).include?(new_pos)
       puts error_message(new_pos)
       new_pos = to_pos(gets.chomp)
     end
     new_pos
-  end
-
-  def no_legal_moves
-    puts "There are no legal moves for this #{@name}. " \
-         'Please select a different piece to move.'
-    position
   end
 
   def base_positions

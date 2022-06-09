@@ -19,8 +19,7 @@ describe Piece do
   before do
     allow(piece).to receive(:puts)
     piece.instance_variable_set(:@name, 'piece')
-    allow(piece).to receive(:update_next_positions)
-    piece.instance_variable_set(:@legal_next_positions, [legal_position])
+    allow(piece).to receive(:legal_next_positions).and_return([legal_position])
     piece.instance_variable_set(:@illegal_check_next_positions, [])
   end
 
@@ -43,23 +42,24 @@ describe Piece do
         end
       end
     end
-
-    context 'when the are no legal moves to be made' do
-      before do
-        piece.instance_variable_set(:@legal_next_positions, [])
-      end
-
-      10.times do
-        it 'produces an error message' do
-          expect(piece).to receive(:puts).with('There are no legal moves for this piece. Please select a different piece to move.')
-          piece.move([], random_move_num)
-        end
-
-        it "does not change the piece's position" do
-          piece.move([], random_move_num)
-          expect(piece.position).to eq(random_position)
-        end
-      end
-    end
   end
 end
+
+# Move below tests to game_spec
+  # context 'when the are no legal moves to be made' do
+    # before do
+      # allow(piece).to receive(:legal_next_positions).and_return([])
+    # end
+
+    # 10.times do
+      # it 'produces an error message' do
+        # expect(piece).to receive(:puts).with('There are no legal moves for this piece. Please select a different piece to move.')
+        # piece.move([], random_move_num)
+      # end
+
+      # it "does not change the piece's position" do
+        # piece.move([], random_move_num)
+        # expect(piece.position).to eq(random_position)
+      # end
+    # end
+  # end

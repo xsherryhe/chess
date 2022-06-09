@@ -17,9 +17,9 @@ class Rook < Piece
   end
 
   def move(board, move_num)
-    @moved = true
     king = king_to_castle(board, move_num)
     king ? move_with_castle(king, board, move_num) : super
+    @moved = true
   end
 
   private
@@ -30,8 +30,7 @@ class Rook < Piece
   end
 
   def move_with_castle(king, board, move_num)
-    update_next_positions(board, move_num)
-    input = valid_castle_input
+    input = valid_castle_input(board, move_num)
     return @position = to_pos(input) unless input =~ /^castle$/i
 
     king.castle(self)

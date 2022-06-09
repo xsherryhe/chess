@@ -16,8 +16,8 @@ class King < Piece
     rooks_to_castle = board.select do |piece|
       player?(piece) && piece.is_a?(Rook) && can_castle?(piece, board, move_num)
     end
-    @moved = true
     rooks_to_castle.empty? ? super : move_with_castle(rooks_to_castle, board, move_num)
+    @moved = true
   end
 
   def can_castle?(rook, board, move_num)
@@ -45,8 +45,7 @@ class King < Piece
   private
 
   def move_with_castle(rooks, board, move_num)
-    update_next_positions(board, move_num)
-    input = valid_castle_input
+    input = valid_castle_input(board, move_num)
     return @position = to_pos(input) unless input =~ /^castle$/i
 
     chosen_rook = valid_rook_input(rooks)

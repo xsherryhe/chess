@@ -7,27 +7,26 @@ class Pawn < Piece
     super
     @name = 'pawn'
     @symbol = ["\u2659", "\u265F"][player_index]
-    @vertical_dir = player_index.zero? ? 1 : -1
+    @vertical_dir = [1, -1][player_index]
     @double_step = false
     @base_moves = [[0, @vertical_dir]]
   end
 
   def move(board, move_num)
-    update_next_positions(board, move_num)
-    new_pos = valid_pos_input
+    new_pos = valid_pos_input(board, move_num)
     @double_step = move_num if new_pos == double_step_pos
     @position = new_pos
   end
 
   def next_positions(board, move_num)
-    positions = in_range(base_positions).reject do |pos|
+    positions = in_range(base_positions)
+    positions << double_step_pos if can_double_step?(board)
+    positions.reject! do |pos|
       board.any? { |piece| piece.position == pos }
     end
-
     diagonal_positions.each do |diag_pos|
       positions << diag_pos if can_capture?(move_num, diag_pos, board)
     end
-    positions << double_step_pos if in_starting_pos?
     positions
   end
 
@@ -59,8 +58,11 @@ class Pawn < Piece
       piece.position.last == position.last
   end
 
-  def in_starting_pos?
-    position.last == (player_index.zero? ? 1 : 6)
+  def can_double_step?(board)
+    position.last == [1, 6][player_index] &&
+      board.none? do |piece|
+        piece.position == [position.first, [2, 5][player_index]]
+      end
   end
 
   # TODO: Promotion
