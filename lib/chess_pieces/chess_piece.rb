@@ -1,4 +1,10 @@
+# frozen_string_literal: true
+
+require_relative '.././chess_base.rb'
+
 class Piece
+  include BaseMethods
+
   attr_accessor :position
   attr_reader :player_index, :symbol
 
@@ -14,12 +20,9 @@ class Piece
   def legal_next_positions(board, move_num)
     king = player_king(board)
     @illegal_check_next_positions, legal_next_positions =
-      next_positions(board, move_num).partition do |pos|
-      moved_piece = clone
-      moved_piece.position = pos
-      king.checked?((moved_piece.is_a?(King) ? moved_piece : king).position,
-                    board - [self] + [moved_piece], move_num)
-    end
+      next_positions(board, move_num).partition do |next_pos|
+        king_in_check?(king, next_pos, board, move_num)
+      end
     legal_next_positions
   end
 
@@ -36,6 +39,15 @@ class Piece
   end
 
   private
+
+  def king_in_check?(king, next_pos, board, move_num)
+    moved_piece = clone
+    moved_piece.position = next_pos
+    moved_board = board - [self] + [moved_piece]
+    capture_pieces(moved_piece, moved_board)
+    king.checked?((moved_piece.is_a?(King) ? moved_piece : king).position,
+                  moved_board, move_num)
+  end
 
   def move_instruction
     "Please enter the square to move the #{@name}, "\
@@ -73,25 +85,5 @@ class Piece
     positions.select do |pos|
       pos.all? { |dir| dir.between?(0, 7) }
     end
-  end
-
-  def to_pos(input)
-    return unless input.length == 2
-
-    col, row = input.upcase.chars
-    pos = [col.ord - 65, row.to_i - 1]
-    pos.all? { |dir| dir.between?(0, 7) } ? pos : nil
-  end
-
-  def player?(piece)
-    piece.player_index == player_index
-  end
-
-  def opponent?(piece)
-    piece.player_index == player_index ^ 1
-  end
-
-  def player_king(board)
-    board.find { |piece| piece.is_a?(King) && player?(piece) }
   end
 end

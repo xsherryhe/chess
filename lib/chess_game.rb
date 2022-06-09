@@ -1,9 +1,13 @@
 Dir[__dir__ + '/chess_pieces/*.rb'].sort.each { |file| require file }
 require_relative './chess_player.rb'
 require_relative './chess_display_board.rb'
+require_relative './chess_game_conditions.rb'
+require_relative './chess_base.rb'
 
 class Game
+  include BaseMethods
   include BoardDisplay
+  include GameConditions
 
   def initialize
     puts "Let's play chess!"
@@ -16,15 +20,16 @@ class Game
 
   def play
     until @game_over
+      display_board
+      evaluate_check
       take_turn
-      #evaluate_game
+      evaluate_game_conditions
     end
   end
 
   private
 
   def take_turn
-    display_board
     @move_num += 1
     player = @players[@curr_player_index]
     pieces = @board.select { |piece| player?(piece) }
@@ -68,14 +73,6 @@ class Game
     'using the format LETTER + NUMBER (e.g., "A1").'
   end
 
-  def capture_pieces(target_piece)
-    @board.delete_if do |piece|
-      opponent?(piece) && piece.position == target_piece.position ||
-        target_piece.is_a?(Pawn) && target_piece.en_passant &&
-          target_piece.en_passant.last == piece.position
-    end
-  end
-
   def insert_starting_board
     [0, 1].each do |player_index|
       { Rook => [0, 7], Knight => [1, 6], Bishop => [2, 5],
@@ -96,22 +93,6 @@ class Game
     (0..7).each do |horiz_dir|
       @board << Pawn.new(player_index, [horiz_dir, [1, 6][player_index]])
     end
-  end
-
-  def to_pos(input)
-    return unless input.length == 2
-
-    col, row = input.upcase.chars
-    pos = [col.ord - 65, row.to_i - 1]
-    pos.all? { |dir| dir.between?(0, 7) } ? pos : nil
-  end
-
-  def player?(piece)
-    piece.player_index == @curr_player_index
-  end
-
-  def opponent?(piece)
-    piece.player_index == @curr_player_index ^ 1
   end
 end
 
