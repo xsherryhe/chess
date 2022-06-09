@@ -1,7 +1,7 @@
 require_relative './chess_piece.rb'
 
 class Pawn < Piece
-  attr_reader :double_step
+  attr_reader :double_step, :en_passant
 
   def initialize(player_index, starting_position)
     super
@@ -9,6 +9,7 @@ class Pawn < Piece
     @symbol = ["\u2659", "\u265F"][player_index]
     @vertical_dir = [1, -1][player_index]
     @double_step = false
+    @en_passant = false
     @base_moves = [[0, @vertical_dir]]
   end
 
@@ -24,13 +25,20 @@ class Pawn < Piece
     positions.reject! do |pos|
       board.any? { |piece| piece.position == pos }
     end
-    diagonal_positions.each do |diag_pos|
-      positions << diag_pos if can_capture?(move_num, diag_pos, board)
-    end
-    positions
+    positions + capture_positions(board, move_num)
   end
 
   private
+
+  def capture_positions(board, move_num)
+    positions = []
+    update_en_passant(board, move_num)
+    positions << en_passant.first if en_passant
+    diagonal_positions.each do |diag_pos|
+      positions << diag_pos if can_capture?(diag_pos, board)
+    end
+    positions
+  end
 
   def diagonal_positions
     positions = [-1, 1].map do |horiz_dir|
@@ -43,16 +51,23 @@ class Pawn < Piece
     [position.first, position.last + 2 * @vertical_dir]
   end
 
-  def can_capture?(move_num, diag_pos, board)
-    board.any? do |piece|
-      opponent?(piece) &&
-        (piece.position == diag_pos ||
-         can_capture_en_passant?(move_num, piece, diag_pos))
+  def can_capture?(diag_pos, board)
+    board.any? { |piece| opponent?(piece) && piece.position == diag_pos }
+  end
+
+  def update_en_passant(board, move_num)
+    @en_passant = false
+    diagonal_positions.each do |diag_pos|
+      en_passant_piece = board.find do |piece|
+        can_capture_en_passant?(piece, move_num, diag_pos)
+      end
+      @en_passant = [diag_pos, en_passant_piece.position] if en_passant_piece
     end
   end
 
-  def can_capture_en_passant?(move_num, piece, diag_pos)
+  def can_capture_en_passant?(piece, move_num, diag_pos)
     piece.is_a?(Pawn) &&
+      opponent?(piece) &&
       piece.double_step == move_num - 1 &&
       piece.position.first == diag_pos.first &&
       piece.position.last == position.last

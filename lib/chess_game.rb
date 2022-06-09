@@ -30,7 +30,7 @@ class Game
     pieces = @board.select { |piece| player?(piece) }
     target_piece = valid_piece_input(player, pieces)
     target_piece.move(@board, @move_num)
-    @board.delete_if { |piece| opponent?(piece) && piece.position == target_piece.position }
+    capture_pieces(target_piece)
     @curr_player_index ^= 1
   end
 
@@ -66,6 +66,14 @@ class Game
   def select_piece_message
     'please enter the square of the piece that you wish to move, ' \
     'using the format LETTER + NUMBER (e.g., "A1").'
+  end
+
+  def capture_pieces(target_piece)
+    @board.delete_if do |piece|
+      opponent?(piece) && piece.position == target_piece.position ||
+        target_piece.is_a?(Pawn) && target_piece.en_passant &&
+          target_piece.en_passant.last == piece.position
+    end
   end
 
   def insert_starting_board
