@@ -155,7 +155,7 @@ describe King do
       10.times do
         it 'prompts the user with a castling-specific instruction' do
           allow(king).to receive(:gets).and_return(legal_position_with_castle_input)
-          expect(king).to receive(:puts).with(/Castling is also available for this king. Please enter the word "castle" to make a castling move./)
+          expect(king).to receive(:puts).with(/Castling is also available for this king. Please enter the word CASTLE to make a castling move./)
           king.move(board, random_move_num)
         end
 
@@ -166,7 +166,7 @@ describe King do
         end
       end
 
-      context 'when the user enters a "castle" command' do
+      context 'when the user enters a CASTLE command' do
         let(:rook_position_inputs) do
           [[0, 7 * player_index], [7, 7 * player_index]].map do |pos|
             ('a'..'h').to_a[pos.first] + (pos.last + 1).to_s
