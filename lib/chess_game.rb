@@ -12,7 +12,6 @@ class Game
   include GameConditions
 
   def initialize
-    puts "Let's play chess!"
     @players = [0, 1].map { |player_index| Player.new(player_index) }
     @curr_player_index = 0
     @board = []
@@ -111,6 +110,3 @@ class Game
     .map.with_index(1) { |name, i| "#{i}. #{name}" }.join("\r\n  ")
   end
 end
-
-game = Game.new
-game.play
