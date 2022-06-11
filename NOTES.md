@@ -3,6 +3,13 @@ Basic game
     -name, color/player, base_moves, legal_next_pos (method), position, can_jump, basic move method, special methods for special moves
   -Game class with players, board (array of pieces), play/take turn/evaluate game method
     -Option to resign, propose draw, or view instructions after every turn
+      -View instructions
+      -Resign game to opponent
+      -Propose a draw of game
+      -Save game
+      -Load a different game
+      -Back to game
+      -Exit to main menu
   -Evaluate game module
     -Evalute if pawn is in last row and must transform
     -Evaluate check

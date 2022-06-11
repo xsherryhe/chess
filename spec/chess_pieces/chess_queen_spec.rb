@@ -50,7 +50,7 @@ describe Queen do
 
       10.times do
         it 'prompts the user to enter a position' do
-          expect(queen).to receive(:puts).with('Please enter the square to move the queen, using the format LETTER + NUMBER (e.g., "A1").')
+          expect(queen).to receive(:puts).with(/Please enter the square to move the queen/)
           queen.move([], random_move_num)
         end
 

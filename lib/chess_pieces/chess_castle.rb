@@ -3,11 +3,11 @@ module Castle
 
   def castle_instruction
     "Castling is also available for this #{@name}. " \
-    'Please enter the word "castle" to make a castling move.'
+    'Please enter the word CASTLE to make a castling move.'
   end
 
-  def move_with_castle_instruction
-    move_instruction + "\r\n" + castle_instruction
+  def move_with_castle_instruction(move_num)
+    move_instruction(move_num) + "\r\n" + castle_instruction
   end
 
   def error_with_castle_message
@@ -15,7 +15,7 @@ module Castle
   end
 
   def valid_castle_input(board, move_num)
-    puts move_with_castle_instruction
+    puts move_with_castle_instruction(move_num)
     input = gets.chomp
     until input =~ /^castle$/i ||
           legal_next_positions(board, move_num).include?(to_pos(input))

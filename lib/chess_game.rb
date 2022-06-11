@@ -1,13 +1,15 @@
 Dir[__dir__ + '/chess_pieces/*.rb'].sort.each { |file| require file }
+require_relative './chess_base.rb'
 require_relative './chess_player.rb'
 require_relative './chess_display_board.rb'
+require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
-require_relative './chess_base.rb'
 
 class Game
   include BaseMethods
   include BoardDisplay
   include GameConditions
+  include GameMenu
 
   def initialize
     puts "Let's play chess!"
@@ -22,38 +24,54 @@ class Game
     until @game_over
       display_board
       display_check_state
-      take_turn
+      player_action
       display_mate_state
     end
   end
 
-  private
-
-  def take_turn
-    @move_num += 1
+  def player_action
     player = @players[@curr_player_index]
     pieces = @board.select { |piece| player?(piece) }
-    target_piece = valid_piece_input(player, pieces)
-    target_piece.move(@board, @move_num)
-    capture_pieces(target_piece)
-    @curr_player_index ^= 1
+    action = valid_input(player, pieces)
+    return game_menu(player) if action =~ /^menu$/i
+
+    take_turn(action)
   end
 
-  def valid_piece_input(player, pieces)
-    puts select_piece_instruction(player)
+  private
+
+  def valid_input(player, pieces)
+    puts select_piece_instruction(player) + game_menu_instruction
+
     loop do
-      piece_pos = to_pos(gets.chomp)
+      input = gets.chomp
+      return input if input =~ /^menu$/i
+
+      piece_pos = to_pos(input)
       target_piece = pieces.find { |piece| piece.position == piece_pos }
-      if target_piece && !target_piece.legal_next_positions(@board, @move_num).empty?
-        return target_piece
-      end
+      return target_piece if valid_piece?(target_piece)
 
       puts select_piece_error_message(target_piece, piece_pos)
     end
   end
 
+  def valid_piece?(target_piece)
+    target_piece && !target_piece.legal_next_positions(@board, @move_num).empty?
+  end
+
+  def take_turn(target_piece)
+    @move_num += 1
+    target_piece.move(@board, @move_num)
+    capture_pieces(target_piece)
+    @curr_player_index ^= 1
+  end
+
   def select_piece_instruction(player)
     player.name + ', ' + select_piece_message
+  end
+
+  def game_menu_instruction
+    ' (Or enter the word MENU to view other game options.)'
   end
 
   def select_piece_error_message(target_piece, piece_pos)
@@ -69,8 +87,8 @@ class Game
   end
 
   def select_piece_message
-    'please enter the square of the piece that you wish to move, ' \
-    'using the format LETTER + NUMBER (e.g., "A1").'
+    'please enter the square of the piece that you wish to move' +
+      (@move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
   end
 
   def insert_starting_board

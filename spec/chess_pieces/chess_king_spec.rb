@@ -48,7 +48,7 @@ describe King do
 
       10.times do
         it 'prompts the user to enter a position' do
-          expect(king).to receive(:puts).with('Please enter the square to move the king, using the format LETTER + NUMBER (e.g., "A1").')
+          expect(king).to receive(:puts).with(/Please enter the square to move the king/)
           king.move(board, random_move_num)
         end
 
@@ -177,10 +177,11 @@ describe King do
         10.times do
           it 'displays a list of rooks to castle and prompts the user to select a rook position' do
             allow(king).to receive(:gets).and_return(%w[castle CASTLE].sample, rook_position_input)
-            expect(king).to receive(:puts).with(
+            rook_message_reg = Regexp.new(
               "Your king can castle with the following rooks at: #{rook_position_inputs.map(&:upcase).join(', ')}" \
-              "\r\nPlease enter the square of the rook that you wish to castle with, using the format LETTER + NUMBER (e.g., \"A1\")."
+              "\r\nPlease enter the square of the rook that you wish to castle with"
             )
+            expect(king).to receive(:puts).with(rook_message_reg)
             king.move(board, random_move_num)
           end
         end

@@ -48,12 +48,12 @@ class King < Piece
     input = valid_castle_input(board, move_num)
     return @position = to_pos(input) unless input =~ /^castle$/i
 
-    chosen_rook = valid_rook_input(rooks)
+    chosen_rook = valid_rook_input(rooks, move_num)
     castle(chosen_rook)
   end
 
-  def valid_rook_input(rooks)
-    puts rook_input_instruction(rooks)
+  def valid_rook_input(rooks, move_num)
+    puts rook_input_instruction(rooks, move_num)
     rook_position = to_pos(gets.chomp)
     chosen_rook = rooks.find { |rook| rook.position == rook_position }
     until chosen_rook
@@ -64,10 +64,10 @@ class King < Piece
     chosen_rook
   end
 
-  def rook_input_instruction(rooks)
+  def rook_input_instruction(rooks, move_num)
     valid_rook_display(rooks) +
-      "\r\nPlease enter the square of the rook that you wish to castle with, " \
-      'using the format LETTER + NUMBER (e.g., "A1").'
+      "\r\nPlease enter the square of the rook that you wish to castle with" +
+      (move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
   end
 
   def valid_rook_display(rooks)

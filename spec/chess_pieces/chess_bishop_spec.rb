@@ -46,7 +46,7 @@ describe Bishop do
 
       10.times do
         it 'prompts the user to enter a position' do
-          expect(bishop).to receive(:puts).with('Please enter the square to move the bishop, using the format LETTER + NUMBER (e.g., "A1").')
+          expect(bishop).to receive(:puts).with(/Please enter the square to move the bishop/)
           bishop.move([], random_move_num)
         end
 
