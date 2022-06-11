@@ -107,6 +107,6 @@ class Game
   def promote_class_input_instruction
     "Please enter the piece type to promote your pawn to:\r\n" \
     '  ' + %w[QUEEN BISHOP KNIGHT ROOK]
-    .map.with_index(1) { |name, i| "#{i}. #{name}" }.join("\r\n  ")
+           .map.with_index(1) { |name, i| "#{i}. #{name}" }.join("\r\n  ")
   end
 end

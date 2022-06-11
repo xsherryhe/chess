@@ -1,11 +1,22 @@
 module GameConditions
-  private
+  def display_check_state
+    return unless check
+
+    puts color_message('check') + '. (Press ENTER to continue).'
+    gets.chomp
+  end
 
   def display_mate_state
     return unless no_legal_moves
 
     display_board
     check ? display_checkmate : display_stalemate
+  end
+
+  private
+
+  def check
+    player_king.checked?(player_king.position, @board, @move_num)
   end
 
   def no_legal_moves
@@ -17,17 +28,6 @@ module GameConditions
     [@curr_player_index ^ 1, @curr_player_index].map do |player_index|
       @players[player_index].color
     end.join(" gives #{condition} to ")
-  end
-
-  def check
-    player_king.checked?(player_king.position, @board, @move_num)
-  end
-
-  def display_check_state
-    return unless check
-
-    puts color_message('check') + '. (Press ENTER to continue).'
-    gets.chomp
   end
 
   def display_checkmate

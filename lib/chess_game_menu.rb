@@ -14,14 +14,13 @@ module GameMenu
   end
 
   def game_menu_options
-    "Enter one of the following words to select the corresponding option:\r\n" \
-    "  1. HELP (View instructions.)\r\n" \
-    "  2. RESIGN (Resign current game to opponent. This will end the game.)\r\n" \
-    "  3. DRAW (Propose a draw of current game.)\r\n" \
-    "  4. SAVE (Save the current game.)\r\n" \
-    "  5. LOAD (Load a different game.)\r\n" \
-    "  6. MAIN (Exit to main menu.)\r\n" \
-    "  7. BACK (Go back to current game.)\r\n"
+    "Enter one of the following words to select the corresponding option:\r\n" +
+      ['HELP (View instructions.)',
+       'RESIGN (Resign current game to opponent. This will end the game.)',
+       'DRAW (Propose a draw of current game.)',
+       'SAVE (Save the current game.)', 'LOAD (Load a different game.)',
+       'MAIN (Exit to main menu.)', 'BACK (Go back to current game.)']
+      .map.with_index(1) { |option, i| "  #{i}. #{option}" }.join("\r\n")
   end
 
   def select_menu_option(player)

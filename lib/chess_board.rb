@@ -1,4 +1,13 @@
 module Board
+  def display_board
+    text_board = displayed_board.map.with_index do |row, i|
+      "#{i + 1}#{row.join}"
+    end.reverse << displayed_board_letters
+    puts "\r\n" + text_board.map { |line| '     ' + line }.join("\r\n") + "\r\n"
+  end
+
+  private
+
   def insert_starting_board
     [0, 1].each do |player_index|
       { Rook => [0, 7], Knight => [1, 6], Bishop => [2, 5],
@@ -19,13 +28,6 @@ module Board
     (0..7).each do |horiz_dir|
       @board << Pawn.new(player_index, [horiz_dir, [1, 6][player_index]])
     end
-  end
-
-  def display_board
-    text_board = displayed_board.map.with_index do |row, i|
-      "#{i + 1}#{row.join}"
-    end.reverse << displayed_board_letters
-    puts "\r\n" + text_board.map { |line| '     ' + line }.join("\r\n") + "\r\n"
   end
 
   def displayed_board
