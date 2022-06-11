@@ -63,15 +63,12 @@ class Game
     @move_num += 1
     target_piece.move(@board, @move_num)
     capture_pieces(target_piece)
+    promote(target_piece) if target_piece.is_a?(Pawn) && target_piece.promoting
     @curr_player_index ^= 1
   end
 
   def select_piece_instruction(player)
     player.name + ', ' + select_piece_message
-  end
-
-  def game_menu_instruction
-    ' (Or enter the word MENU to view other game options.)'
   end
 
   def select_piece_error_message(target_piece, piece_pos)
@@ -91,26 +88,27 @@ class Game
       (@move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
   end
 
-  def insert_starting_board
-    [0, 1].each do |player_index|
-      { Rook => [0, 7], Knight => [1, 6], Bishop => [2, 5],
-        Queen => [3], King => [4] }.each do |piece_class, horiz_dirs|
-          insert_non_pawn_starting(horiz_dirs, piece_class, player_index)
-        end
-      insert_pawn_starting(player_index)
+  def promote(pawn)
+    display_board
+    puts "#{@players[@curr_player_index].name}, your pawn must promote."
+    @board << valid_promote_class_input.new(@curr_player_index, pawn.position)
+    @board.delete(pawn)
+  end
+
+  def valid_promote_class_input
+    puts promote_class_input_instruction
+    loop do
+      class_index = %w[queen bishop knight rook].index(gets.chomp.downcase)
+      return [Queen, Bishop, Knight, Rook][class_index] if class_index >= 0
+
+      puts 'Invalid input! ' + promote_class_input_instruction
     end
   end
 
-  def insert_non_pawn_starting(horiz_dirs, piece_class, player_index)
-    horiz_dirs.each do |horiz_dir|
-      @board << piece_class.new(player_index, [horiz_dir, 7 * player_index])
-    end
-  end
-
-  def insert_pawn_starting(player_index)
-    (0..7).each do |horiz_dir|
-      @board << Pawn.new(player_index, [horiz_dir, [1, 6][player_index]])
-    end
+  def promote_class_input_instruction
+    "Please enter the piece type to promote your pawn to:\r\n" \
+    '  ' + %w[QUEEN BISHOP KNIGHT ROOK]
+    .map.with_index(1) { |name, i| "#{i}. #{name}" }.join("\r\n  ")
   end
 end
 

@@ -16,7 +16,7 @@ Basic game
     -Evaluate checkmate
     -Evaluate stalemate
     -Evaluate special game end conditions
-      -Repetition of moves more than 3 times (player to move claims draw)
+      -Repetition of positions more than 3 times (player to move can claim draw)
       -No pawn move/no capture in the last 50 moves (player to move claims draw)
 
 Save state

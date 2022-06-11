@@ -1,7 +1,7 @@
 require_relative './chess_piece.rb'
 
 class Pawn < Piece
-  attr_reader :double_step, :en_passant
+  attr_reader :double_step, :en_passant, :promoting
 
   def initialize(player_index, starting_position)
     super
@@ -10,6 +10,7 @@ class Pawn < Piece
     @vertical_dir = [1, -1][player_index]
     @double_step = false
     @en_passant = false
+    @promoting = false
     @base_moves = [[0, @vertical_dir]]
   end
 
@@ -17,6 +18,7 @@ class Pawn < Piece
     new_pos = valid_pos_input(board, move_num)
     @double_step = move_num if new_pos == double_step_pos
     @position = new_pos
+    @promoting = true if position.last == 7 * (player_index ^ 1)
   end
 
   def next_positions(board, move_num)
@@ -79,6 +81,4 @@ class Pawn < Piece
         piece.position == [position.first, [2, 5][player_index]]
       end
   end
-
-  # TODO: Promotion
 end

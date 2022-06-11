@@ -18,6 +18,7 @@ module BaseMethods
       opponent?(piece) &&
         piece.position == target_piece.position ||
         target_piece.is_a?(Pawn) && target_piece.en_passant &&
+          target_piece.position == target_piece.en_passant.first &&
           target_piece.en_passant.last == piece.position
     end
   end
