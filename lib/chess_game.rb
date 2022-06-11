@@ -1,15 +1,15 @@
 Dir[__dir__ + '/chess_pieces/*.rb'].sort.each { |file| require file }
 require_relative './chess_base.rb'
 require_relative './chess_player.rb'
-require_relative './chess_display_board.rb'
+require_relative './chess_board.rb'
 require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
 
 class Game
   include BaseMethods
-  include BoardDisplay
-  include GameConditions
+  include Board
   include GameMenu
+  include GameConditions
 
   def initialize
     puts "Let's play chess!"
