@@ -1,20 +1,19 @@
 module GameMenu
   private
 
+  def game_menu_instruction
+    ' (Or enter the word MENU to view other game options.)'
+  end
+
   def game_menu(player)
     until @menu_done
-      puts game_menu_instructions
-      case gets.chomp
-      when /^1|help$/i then view_game_instructions
-      when /^2|resign$/i then resign_game(player)
-      when /^3|draw$/i then propose_draw(player)
-      when /^7|back$/i then @menu_done = true
-      end
+      puts game_menu_options
+      select_menu_option(player)
     end
     @menu_done = false
   end
 
-  def game_menu_instructions
+  def game_menu_options
     "Enter one of the following words to select the corresponding option:\r\n" \
     "  1. HELP (View instructions.)\r\n" \
     "  2. RESIGN (Resign current game to opponent. This will end the game.)\r\n" \
@@ -23,6 +22,16 @@ module GameMenu
     "  5. LOAD (Load a different game.)\r\n" \
     "  6. MAIN (Exit to main menu.)\r\n" \
     "  7. BACK (Go back to current game.)\r\n"
+  end
+
+  def select_menu_option(player)
+    case gets.chomp
+    when /^1|help$/i then view_game_instructions
+    when /^2|resign$/i then resign_game(player)
+    when /^3|draw$/i then propose_draw(player)
+    when /^7|back$/i then @menu_done = true
+    else puts 'Invalid input!'
+    end
   end
 
   def view_game_instructions
