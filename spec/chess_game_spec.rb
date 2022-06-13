@@ -3,6 +3,7 @@ describe Game do
   subject(:game) { described_class.new }
   let(:white_player) { instance_double(Player, name: 'Foo', player_index: 0, color: 'White') }
   let(:black_player) { instance_double(Player, name: 'Bar', player_index: 1, color: 'Black') }
+  let(:board) { game.instance_variable_get(:@board) }
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
@@ -13,7 +14,6 @@ describe Game do
       allow(game).to receive(:puts)
     end
 
-    let(:board) { game.instance_variable_get(:@board) }
     it 'sets up starting board with correct number of pieces for each side' do
       side_count = board.partition { |piece| piece.player_index.zero? }.map(&:size)
       expect(side_count).to eq([16, 16])
@@ -373,7 +373,118 @@ describe Game do
     end
 
     context 'when the position of a player piece that can be moved is entered' do
-      
+      let(:movable_piece_position) { Array.new(2) { rand(8) } }
+      let(:movable_piece_position_input) do
+        ('a'..'h').to_a[movable_piece_position.first] + (movable_piece_position.last + 1).to_s
+      end
+      let(:piece_next_position) do
+        loop do
+          pos = Array.new(2) { rand(8) }
+          return pos unless pos == movable_piece_position
+        end
+      end
+      let(:movable_piece) { instance_double(Piece, player_index: curr_player_index, position: movable_piece_position) }
+      let(:capturable_piece) { instance_double(Piece, player_index: curr_player_index ^ 1, position: piece_next_position) }
+      let(:test_board) { [movable_piece, capturable_piece] }
+      let(:random_move_num) { rand(100) }
+
+      before do
+        game.instance_variable_set(:@board, test_board)
+        game.instance_variable_set(:@move_num, random_move_num)
+        allow(game).to receive(:gets).and_return(movable_piece_position_input)
+        allow(movable_piece).to receive(:legal_next_positions).and_return([piece_next_position])
+        allow(movable_piece).to receive(:move) do
+          allow(movable_piece).to receive(:position).and_return(piece_next_position)
+        end
+      end
+
+      10.times do
+        it 'increases the move number of the game' do
+          expect { game.player_action }.to change { game.instance_variable_get(:@move_num) }.by(1)
+        end
+
+        it 'sends a move message to the player piece' do
+          expect(movable_piece).to receive(:move).with(test_board, random_move_num + 1)
+          game.player_action
+        end
+
+        it "removes any captured pieces on the player piece's new position" do
+          game.player_action
+          expect(board).not_to include(capturable_piece)
+        end
+      end
+
+      context 'when the player piece is a pawn' do
+        let(:movable_piece) { instance_double(Pawn, player_index: curr_player_index, position: movable_piece_position) }
+        before do
+          allow(game).to receive(:display_board)
+          allow(movable_piece).to receive(:is_a?).with(Pawn).and_return(true)
+          allow(movable_piece).to receive(:en_passant).and_return(false)
+        end
+
+        context 'when the player piece is ready for promotion' do
+          let(:class_input) do
+            [[%w[knight KNIGHT].sample, Knight],
+             [%w[rook ROOK].sample, Rook],
+             [%w[bishop BISHOP].sample, Bishop],
+             [%w[queen QUEEN].sample, Queen]].sample
+          end
+
+          before do
+            allow(movable_piece).to receive(:promoting).and_return(true)
+          end
+
+          context 'when the player enters a valid class to promote the pawn' do
+            before do
+              allow(game).to receive(:gets).and_return(movable_piece_position_input, class_input.first)
+            end
+
+            10.times do
+              it 'prompts the player to select a class to promote the pawn' do
+                expect(game).to receive(:puts).with(/Please enter the piece type to promote your pawn to:/)
+                game.player_action
+              end
+
+              it 'promotes the pawn to the selected class on the board' do
+                game.player_action
+                new_piece = board.find { |piece| piece.position == piece_next_position }
+                expect(new_piece).to be_a(class_input.last)
+              end
+            end
+          end
+
+          context 'while the player enters an invalid input to promote the pawn' do
+            10.times do
+              it 'prompts the player to enter a class to promote the pawn until a valid input is entered' do
+                invalid_count = rand(100)
+                call_count = 0
+                invalid_inputs = ['pawn', 'KING', "I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
+                allow(game).to receive(:gets) do
+                  call_count += 1
+                  if call_count == 1
+                    movable_piece_position_input
+                  elsif call_count == invalid_count + 2
+                    class_input.first
+                  else invalid_inputs.sample
+                  end
+                end
+                expect(game).to receive(:puts).with(/Invalid input!/).exactly(invalid_count).times
+                game.player_action
+              end
+            end
+          end
+        end
+
+        context 'when the player piece is not ready for promotion' do
+          10.times do
+            it 'does not prompt the player to select a class to promote the pawn' do
+              allow(movable_piece).to receive(:promoting).and_return(false)
+              expect(game).not_to receive(:puts).with(/Please enter the piece type to promote your pawn to:/)
+              game.player_action
+            end
+          end
+        end
+      end
     end
 
     context 'while the position of a player piece that cannot be moved is entered' do

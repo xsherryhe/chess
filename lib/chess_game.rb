@@ -96,7 +96,7 @@ class Game
     puts promote_class_input_instruction
     loop do
       class_index = %w[queen bishop knight rook].index(gets.chomp.downcase)
-      return [Queen, Bishop, Knight, Rook][class_index] if class_index >= 0
+      return [Queen, Bishop, Knight, Rook][class_index] if class_index
 
       puts 'Invalid input! ' + promote_class_input_instruction
     end
