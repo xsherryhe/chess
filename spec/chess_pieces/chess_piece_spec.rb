@@ -24,7 +24,7 @@ describe Piece do
   end
 
   describe '#move' do
-    context 'while an invalid input is given' do
+    context 'while an invalid input is entered' do
       10.times do
         it 'prompts the user to enter an input until a valid input is entered' do
           invalid_count = rand(100)

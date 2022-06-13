@@ -32,9 +32,7 @@ class Game
     player = @players[@curr_player_index]
     pieces = @board.select { |piece| player?(piece) }
     action = valid_input(player, pieces)
-    return game_menu(player) if action =~ /^menu$/i
-
-    take_turn(action)
+    action =~ /^menu$/i ? game_menu(player) : take_turn(action)
   end
 
   private

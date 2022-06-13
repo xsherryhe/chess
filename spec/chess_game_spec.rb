@@ -85,6 +85,7 @@ describe Game do
       allow(king_to_check).to receive(:is_a?).with(King).and_return(true)
       allow(King).to receive(:new).with(checked_player_index ^ 1, anything).and_call_original
       allow(game).to receive(:puts)
+      allow(game).to receive(:gets).and_return('')
       game.instance_variable_set(:@curr_player_index, checked_player_index)
     end
 
@@ -193,6 +194,198 @@ describe Game do
           expect(game_over).not_to be true
         end
       end
+    end
+  end
+
+  describe '#player_action' do
+    let(:curr_player_index) { rand(2) }
+    let(:curr_player) { [white_player, black_player][curr_player_index] }
+    let(:opponent_player) { [white_player, black_player][curr_player_index ^ 1] }
+
+    before do
+      game.instance_variable_set(:@curr_player_index, curr_player_index)
+      allow(game).to receive(:puts)
+    end
+
+    context 'when the word "menu" is entered' do
+      context 'when the word "back" or "7" is entered' do
+        before do
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 7].sample)
+        end
+
+        10.times do
+          it 'prompts the player for an input to determine their next action' do
+            prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
+            expect(game).to receive(:puts).with(prompt_reg)
+            game.player_action
+          end
+
+          it 'outputs a list of game menu options' do
+            expect(game).to receive(:puts).with(/Enter one of the following words to select the corresponding option:/)
+            game.player_action
+          end
+        end
+      end
+
+      context 'while the word "help" or "1" is entered' do
+        10.times do
+          it 'outputs chess instructions the corresponding number of times' do
+            help_count = rand(1..100)
+            call_count = 0
+            allow(game).to receive(:gets) do
+              call_count += 1
+              if call_count == 1
+                %w[menu MENU].sample
+              elsif call_count == (help_count * 2) + 2
+                'back'
+              elsif call_count.even?
+                %w[help HELP 1].sample
+              else ''
+              end
+            end
+
+            expect(game).to receive(:puts).with(/Chess is a board game with two players/).exactly(help_count).times
+            game.player_action
+          end
+        end
+      end
+
+      context 'when the word "resign" or "2" is entered' do
+        context 'when the player confirms that they wish to resign' do
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[resign RESIGN 2].sample, %w[y Y yes YES].sample)
+          end
+
+          10.times do
+            it 'outputs a warning to player' do
+              expect(game).to receive(:puts).with("WARNING: This will end the game.\r\nAre you sure you wish to resign the game to your opponent? (Y/N)")
+              game.player_action
+            end
+
+            it 'outputs an opponent win game message' do
+              expect(game).to receive(:puts).with("#{opponent_player.name} has won the game!")
+              game.player_action
+            end
+
+            it 'ends the game' do
+              game.player_action
+              game_over = game.instance_variable_get(:@game_over)
+              expect(game_over).to be true
+            end
+          end
+        end
+
+        context 'when the player does not confirm that they wish to resign' do
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[resign RESIGN 2].sample, ['n', 'N', 'no', 'NO', 'yesterday', ''].sample, 'back')
+          end
+
+          10.times do
+            it 'outputs a warning to player' do
+              expect(game).to receive(:puts).with("WARNING: This will end the game.\r\nAre you sure you wish to resign the game to your opponent? (Y/N)")
+              game.player_action
+            end
+
+            it 'does not output an opponent win game message' do
+              expect(game).not_to receive(:puts).with("#{opponent_player.name} has won the game!")
+              game.player_action
+            end
+
+            it 'does not end the game' do
+              game.player_action
+              game_over = game.instance_variable_get(:@game_over)
+              expect(game_over).not_to be true
+            end
+          end
+        end
+      end
+
+      context 'when the word "draw" or "3" is entered' do
+        context 'when the opponent accepts the draw' do
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[draw DRAW 3].sample, %w[y Y yes YES].sample)
+          end
+
+          10.times do
+            it 'prompts the opponent to accept or decline the draw' do
+              expect(game).to receive(:puts).with("#{opponent_player.name}, do you accept the proposal of draw?")
+              game.player_action
+            end
+
+            it 'outputs a draw message' do
+              expect(game).to receive(:puts).with('The game ends in a draw.')
+              game.player_action
+            end
+
+            it 'ends the game' do
+              game.player_action
+              game_over = game.instance_variable_get(:@game_over)
+              expect(game_over).to be true
+            end
+          end
+        end
+
+        context 'when the opponent does not accept the draw' do
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[draw DRAW 3].sample, ['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
+          end
+
+          10.times do
+            it 'prompts the opponent to accept or decline the draw' do
+              expect(game).to receive(:puts).with("#{opponent_player.name}, do you accept the proposal of draw?")
+              game.player_action
+            end
+
+            it 'does not output a draw message' do
+              expect(game).not_to receive(:puts).with('The game ends in a draw.')
+              game.player_action
+            end
+
+            it 'does not end the game' do
+              game.player_action
+              game_over = game.instance_variable_get(:@game_over)
+              expect(game_over).not_to be true
+            end
+          end
+        end
+      end
+
+      context 'while an invalid input is entered' do
+        10.times do
+          it 'prompts the user to enter an input until a valid input is entered' do
+            invalid_count = rand(100)
+            call_count = 0
+            invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
+            allow(game).to receive(:gets) do
+              call_count += 1
+              if call_count == 1
+                'menu'
+              elsif call_count == invalid_count + 2
+                'back'
+              else invalid_inputs.sample
+              end
+            end
+            expect(game).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
+            game.player_action
+          end
+        end
+      end
+    end
+
+    context 'when the position of a player piece that can be moved is entered' do
+      
+    end
+
+    context 'while the position of a player piece that cannot be moved is entered' do
+      
+    end
+
+    context 'while the position of a square without a player piece is entered' do
+      
+    end
+
+    context 'while an invalid input is entered' do
+      
     end
   end
 end

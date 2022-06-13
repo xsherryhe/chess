@@ -25,10 +25,10 @@ module GameMenu
 
   def select_menu_option(player)
     case gets.chomp
-    when /^1|help$/i then view_game_instructions
-    when /^2|resign$/i then resign_game(player)
-    when /^3|draw$/i then propose_draw(player)
-    when /^7|back$/i then @menu_done = true
+    when /^1$|^help$/i then view_game_instructions
+    when /^2$|^resign$/i then resign_game(player)
+    when /^3$|^draw$/i then propose_draw(player)
+    when /^7$|^back$/i then @menu_done = true
     else puts 'Invalid input!'
     end
   end
@@ -42,7 +42,7 @@ module GameMenu
   def resign_game(player)
     puts "WARNING: This will end the game.\r\n" \
          'Are you sure you wish to resign the game to your opponent? (Y/N)'
-    return unless gets.chomp =~ /^yes|y$/i
+    return unless gets.chomp =~ /^yes$|^y$/i
 
     puts "#{@players[player.player_index ^ 1].name} has won the game!"
     @menu_done = true
@@ -54,7 +54,7 @@ module GameMenu
     opponent = @players[player.player_index ^ 1]
     puts "#{player.name} proposes a draw of the current game."
     puts "#{opponent.name}, do you accept the proposal of draw?"
-    return draw_refusal(opponent) unless gets.chomp =~ /^yes|y$/i
+    return draw_refusal(opponent) unless gets.chomp =~ /^yes$|^y$/i
 
     puts 'The game ends in a draw.'
     @game_over = true

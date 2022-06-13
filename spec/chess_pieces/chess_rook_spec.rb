@@ -196,7 +196,7 @@ describe Rook do
       10.times do
         it 'prompts the user with a castling-specific instruction' do
           allow(rook).to receive(:gets).and_return(legal_position_with_king_input)
-          expect(rook).to receive(:puts).with(/Castling is also available for this rook. Please enter the word CASTLE to make a castling move./)
+          expect(rook).to receive(:puts).with(/Castling is also available for this rook\. Please enter the word CASTLE to make a castling move\./)
           rook.move(board, random_move_num)
         end
 
