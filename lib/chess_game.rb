@@ -48,7 +48,7 @@ class Game
       target_piece = pieces.find { |piece| piece.position == piece_pos }
       return target_piece if valid_piece?(target_piece)
 
-      puts select_piece_error_message(target_piece, piece_pos)
+      puts input_error_message(target_piece, piece_pos)
     end
   end
 
@@ -68,7 +68,7 @@ class Game
     player.name + ', ' + select_piece_message
   end
 
-  def select_piece_error_message(target_piece, piece_pos)
+  def input_error_message(target_piece, piece_pos)
     error_message =
       if target_piece
         'There are no legal moves for this piece. ' \
@@ -77,7 +77,8 @@ class Game
         "You don't have a piece on that square! "
       else 'Invalid input! '
       end
-    error_message + select_piece_message.capitalize
+    error_message + select_piece_message.capitalize +
+      (target_piece || piece_pos ? '' : game_menu_instruction)
   end
 
   def select_piece_message
