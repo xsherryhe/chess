@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-
+require 'yaml'
 require_relative '.././chess_base.rb'
 
 class Piece
@@ -38,7 +38,15 @@ class Piece
     end.flatten(1)
   end
 
+  def serialize
+    YAML.dump(serialize_vals)
+  end
+
   private
+
+  def serialize_vals
+    { player_index: @player_index, position: @position }
+  end
 
   def king_in_check?(king, next_pos, board, move_num)
     moved_piece = clone

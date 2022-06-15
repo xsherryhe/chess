@@ -32,6 +32,10 @@ class Pawn < Piece
 
   private
 
+  def serialize_vals
+    super.merge({ double_step: @double_step, en_passant: @en_passant })
+  end
+
   def capture_positions(board, move_num)
     positions = []
     update_en_passant(board, move_num)

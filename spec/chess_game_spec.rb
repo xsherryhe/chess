@@ -40,6 +40,7 @@ describe Game do
       allow(game).to receive(:display_board)
       allow(game).to receive(:display_check_state)
       allow(game).to receive(:player_action)
+      allow(game).to receive(:display_repetition_state)
     end
 
     context 'when the game is over' do
@@ -83,6 +84,7 @@ describe Game do
     before do
       allow(King).to receive(:new).with(checked_player_index, anything).and_return(king_to_check)
       allow(king_to_check).to receive(:is_a?).with(King).and_return(true)
+      allow(king_to_check).to receive(:serialize).and_return('')
       allow(King).to receive(:new).with(checked_player_index ^ 1, anything).and_call_original
       allow(game).to receive(:puts)
       allow(game).to receive(:gets).and_return('')
@@ -119,6 +121,7 @@ describe Game do
     before do
       allow(King).to receive(:new).with(mated_player_index, anything).and_return(king_to_mate)
       allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
+      allow(king_to_mate).to receive(:serialize).and_return('')
       allow(King).to receive(:new).with(mated_player_index ^ 1, anything).and_call_original
       allow(game).to receive(:puts)
       allow(game).to receive(:display_board)

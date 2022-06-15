@@ -24,6 +24,10 @@ class Rook < Piece
 
   private
 
+  def serialize_vals
+    super.merge(moved: @moved)
+  end
+
   def king_to_castle(board, move_num)
     king = player_king(board)
     king if king.can_castle?(self, board, move_num)

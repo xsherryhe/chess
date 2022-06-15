@@ -5,10 +5,10 @@ module GameMenu
     ' (Or enter the word MENU to view other game options.)'
   end
 
-  def game_menu(player)
+  def game_menu
     until @menu_done
       puts game_menu_options
-      select_menu_option(player)
+      select_menu_option
     end
     @menu_done = false
   end
@@ -23,11 +23,11 @@ module GameMenu
       .map.with_index(1) { |option, i| "  #{i}. #{option}" }.join("\r\n")
   end
 
-  def select_menu_option(player)
+  def select_menu_option
     case gets.chomp
     when /^1$|^help$/i then view_game_instructions
-    when /^2$|^resign$/i then resign_game(player)
-    when /^3$|^draw$/i then propose_draw(player)
+    when /^2$|^resign$/i then resign_game
+    when /^3$|^draw$/i then propose_draw
     when /^7$|^back$/i then @menu_done = true
     else puts 'Invalid input!'
     end
@@ -39,22 +39,21 @@ module GameMenu
     gets.chomp
   end
 
-  def resign_game(player)
+  def resign_game
     puts "WARNING: This will end the game.\r\n" \
          'Are you sure you wish to resign the game to your opponent? (Y/N)'
     return unless gets.chomp =~ /^yes$|^y$/i
 
-    puts "#{@players[player.player_index ^ 1].name} has won the game!"
+    puts "#{curr_opponent.name} has won the game!"
     @menu_done = true
     @game_over = true
   end
 
-  def propose_draw(player)
+  def propose_draw
     @menu_done = true
-    opponent = @players[player.player_index ^ 1]
-    puts "#{player.name} proposes a draw of the current game."
-    puts "#{opponent.name}, do you accept the proposal of draw?"
-    return draw_refusal(opponent) unless gets.chomp =~ /^yes$|^y$/i
+    puts "#{curr_player.name} proposes a draw of the current game."
+    puts "#{curr_opponent.name}, do you accept the proposal of draw?"
+    return draw_propose_refusal unless gets.chomp =~ /^yes$|^y$/i
 
     puts 'The game ends in a draw.'
     @game_over = true
@@ -78,12 +77,5 @@ module GameMenu
     "So, examples of valid inputs are:\r\n" \
     "     A1 F6 G8 H4\r\n" \
     'Inputs that do not follow this format will not be accepted.'
-  end
-
-  def draw_refusal(opponent)
-    puts "#{opponent.name} does not accept the proposal of draw. " \
-         'The current game will continue.'
-    puts 'Press ENTER to continue.'
-    gets.chomp
   end
 end

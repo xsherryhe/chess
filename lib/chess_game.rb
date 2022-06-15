@@ -1,3 +1,4 @@
+require 'yaml'
 Dir[__dir__ + '/chess_pieces/*.rb'].sort.each { |file| require file }
 require_relative './chess_base.rb'
 require_relative './chess_player.rb'
@@ -17,6 +18,8 @@ class Game
     @board = []
     insert_starting_board
     @move_num = 0
+    @history = []
+    update_history
   end
 
   def play
@@ -24,21 +27,29 @@ class Game
       display_board
       display_check_state
       player_action
+      display_repetition_state
       display_mate_state
     end
   end
 
   def player_action
-    player = @players[@curr_player_index]
     pieces = @board.select { |piece| player?(piece) }
-    action = valid_input(player, pieces)
-    action =~ /^menu$/i ? game_menu(player) : take_turn(action)
+    action = valid_input(pieces)
+    action =~ /^menu$/i ? game_menu : take_turn(action)
   end
 
   private
 
-  def valid_input(player, pieces)
-    puts select_piece_instruction(player) + game_menu_instruction
+  def curr_player
+    @players[@curr_player_index]
+  end
+
+  def curr_opponent
+    @players[@curr_player_index ^ 1]
+  end
+
+  def valid_input(pieces)
+    puts select_piece_instruction + game_menu_instruction
 
     loop do
       input = gets.chomp
@@ -64,8 +75,8 @@ class Game
     @curr_player_index ^= 1
   end
 
-  def select_piece_instruction(player)
-    player.name + ', ' + select_piece_message
+  def select_piece_instruction
+    curr_player.name + ', ' + select_piece_message
   end
 
   def input_error_message(target_piece, piece_pos)
