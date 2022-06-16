@@ -40,7 +40,7 @@ describe Game do
       allow(game).to receive(:display_board)
       allow(game).to receive(:display_check_state)
       allow(game).to receive(:player_action)
-      allow(game).to receive(:display_repetition_state)
+      allow(game).to receive(:display_draw_claim_state)
     end
 
     context 'when the game is over' do
@@ -394,6 +394,7 @@ describe Game do
       before do
         game.instance_variable_set(:@board, test_board)
         game.instance_variable_set(:@move_num, random_move_num)
+        allow(movable_piece).to receive(:serialize).and_return('')
         allow(movable_piece).to receive(:legal_next_positions).and_return([piece_next_position])
         allow(movable_piece).to receive(:move) do
           allow(movable_piece).to receive(:position).and_return(piece_next_position)
@@ -511,6 +512,7 @@ describe Game do
 
         10.times do
           it 'prompts the user to enter a position until a valid position is entered' do
+            allow(unmovable_piece).to receive(:serialize).and_return('')
             allow(unmovable_piece).to receive(:legal_next_positions).and_return([])
             invalid_count = rand(1..100)
             call_count = 0

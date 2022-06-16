@@ -6,13 +6,13 @@ module GameConditions
     gets.chomp
   end
 
-  def display_repetition_state
-    update_history
-    return unless @history.count(@history.last) >= 3
+  def display_draw_claim_state
+    repetition_of_positions = @history.count(@history.last) >= 3
+    fifty_idle_moves = @idle_moves >= 100
+    return unless repetition_of_positions || fifty_idle_moves
 
     display_board
-    puts 'The same position with the same player to move has been repeated ' \
-         'at least 3 times in the game.'
+    puts draw_claim_message(repetition_of_positions, fifty_idle_moves)
     puts "#{curr_player.name}, do you wish to claim a draw?"
     return draw_claim_refusal unless gets.chomp =~ /^yes$|^y$/i
 
@@ -33,9 +33,17 @@ module GameConditions
     player_king.checked?(player_king.position, @board, @move_num)
   end
 
-  def update_history
-    @history << YAML.dump(curr_player_index: @curr_player_index,
-                          board: @board.map(&:serialize).sort)
+  def draw_claim_message(repetition_of_positions, fifty_idle_moves)
+    repetition_message = 'The same position with the same player to move ' \
+                 'has been repeated at least 3 times in the game.'
+    idle_moves_message = 'there have been 50 consecutive moves of both ' \
+                         'players without any piece taken or any pawn move.'
+    if repetition_of_positions && fifty_idle_moves
+      [repetition_message, idle_moves_message].join(' Also, ')
+    elsif repetition_of_positions
+      repetition_message
+    else idle_moves_message.capitalize
+    end
   end
 
   def draw_claim_refusal

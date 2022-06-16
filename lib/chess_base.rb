@@ -13,14 +13,18 @@ module BaseMethods
     board.find { |piece| piece.is_a?(King) && player?(piece) }
   end
 
-  def capture_pieces(target_piece, board = @board)
-    board.delete_if do |piece|
+  def index_to_capture(target_piece, board = @board)
+    board.index do |piece|
       opponent?(piece) &&
         piece.position == target_piece.position ||
         target_piece.is_a?(Pawn) && target_piece.en_passant &&
           target_piece.position == target_piece.en_passant.first &&
           target_piece.en_passant.last == piece.position
     end
+  end
+
+  def capture_piece(capture_index, board = @board)
+    board.delete_at(capture_index) if capture_index
   end
 
   def to_pos(input)

@@ -3,12 +3,14 @@ Dir[__dir__ + '/chess_pieces/*.rb'].sort.each { |file| require file }
 require_relative './chess_base.rb'
 require_relative './chess_player.rb'
 require_relative './chess_board.rb'
+require_relative './chess_promotion.rb'
 require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
 
 class Game
   include BaseMethods
   include Board
+  include Promotion
   include GameMenu
   include GameConditions
 
@@ -18,6 +20,7 @@ class Game
     @board = []
     insert_starting_board
     @move_num = 0
+    @idle_moves = 0
     @history = []
     update_history
   end
@@ -27,7 +30,7 @@ class Game
       display_board
       display_check_state
       player_action
-      display_repetition_state
+      display_draw_claim_state
       display_mate_state
     end
   end
@@ -70,9 +73,12 @@ class Game
   def take_turn(target_piece)
     @move_num += 1
     target_piece.move(@board, @move_num)
-    capture_pieces(target_piece)
+    capture_index = index_to_capture(target_piece)
+    @idle_moves = capture_index || target_piece.is_a?(Pawn) ? 0 : @idle_moves + 1
+    capture_piece(capture_index)
     promote(target_piece) if target_piece.is_a?(Pawn) && target_piece.promoting
     @curr_player_index ^= 1
+    update_history
   end
 
   def select_piece_instruction
@@ -97,26 +103,8 @@ class Game
       (@move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
   end
 
-  def promote(pawn)
-    display_board
-    puts "#{@players[@curr_player_index].name}, your pawn must promote."
-    @board << valid_promote_class_input.new(@curr_player_index, pawn.position)
-    @board.delete(pawn)
-  end
-
-  def valid_promote_class_input
-    puts promote_class_input_instruction
-    loop do
-      class_index = %w[queen bishop knight rook].index(gets.chomp.downcase)
-      return [Queen, Bishop, Knight, Rook][class_index] if class_index
-
-      puts 'Invalid input! ' + promote_class_input_instruction
-    end
-  end
-
-  def promote_class_input_instruction
-    "Please enter the piece type to promote your pawn to:\r\n" \
-    '  ' + %w[QUEEN BISHOP KNIGHT ROOK]
-           .map.with_index(1) { |name, i| "#{i}. #{name}" }.join("\r\n  ")
+  def update_history
+    @history << YAML.dump(curr_player_index: @curr_player_index,
+                          board: @board.map(&:serialize).sort)
   end
 end

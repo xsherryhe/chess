@@ -52,7 +52,7 @@ class Piece
     moved_piece = clone
     moved_piece.position = next_pos
     moved_board = board - [self] + [moved_piece]
-    capture_pieces(moved_piece, moved_board)
+    capture_piece(index_to_capture(moved_piece, moved_board), moved_board)
     king.checked?((moved_piece.is_a?(King) ? moved_piece : king).position,
                   moved_board, move_num)
   end
