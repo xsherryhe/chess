@@ -390,10 +390,12 @@ describe Game do
       let(:capturable_piece) { instance_double(Piece, player_index: curr_player_index ^ 1, position: piece_next_position) }
       let(:test_board) { [movable_piece, capturable_piece] }
       let(:random_move_num) { rand(100) }
+      let(:random_idle_moves) { rand(1..48) }
 
       before do
         game.instance_variable_set(:@board, test_board)
         game.instance_variable_set(:@move_num, random_move_num)
+        game.instance_variable_set(:@idle_moves, random_idle_moves)
         allow(movable_piece).to receive(:serialize).and_return('')
         allow(movable_piece).to receive(:legal_next_positions).and_return([piece_next_position])
         allow(movable_piece).to receive(:move) do
@@ -419,6 +421,20 @@ describe Game do
           it "removes any captured pieces on the player piece's new position" do
             game.player_action
             expect(board).not_to include(capturable_piece)
+          end
+
+          it 'updates the game history' do
+            expect { game.player_action }.to change { game.instance_variable_get(:@history).size }.by(1)
+          end
+        end
+
+        context "when an opponent piece is captured by the player's move" do
+          10.times do
+            it 'resets number of idle moves to zero' do
+              game.player_action
+              idle_moves = game.instance_variable_get(:@idle_moves)
+              expect(idle_moves).to eql(0)
+            end
           end
         end
 
@@ -448,6 +464,12 @@ describe Game do
               end
 
               10.times do
+                it 'resets number of idle moves to zero' do
+                  game.player_action
+                  idle_moves = game.instance_variable_get(:@idle_moves)
+                  expect(idle_moves).to eql(0)
+                end
+
                 it 'prompts the player to select a class to promote the pawn' do
                   expect(game).to receive(:puts).with(/Please enter the piece type to promote your pawn to:/)
                   game.player_action
@@ -484,12 +506,32 @@ describe Game do
           end
 
           context 'when the player piece is not ready for promotion' do
+            before do
+              allow(movable_piece).to receive(:promoting).and_return(false)
+            end
+
             10.times do
+              it 'resets number of idle moves to zero' do
+                game.player_action
+                idle_moves = game.instance_variable_get(:@idle_moves)
+                expect(idle_moves).to eql(0)
+              end
+
               it 'does not prompt the player to select a class to promote the pawn' do
-                allow(movable_piece).to receive(:promoting).and_return(false)
                 expect(game).not_to receive(:puts).with(/Please enter the piece type to promote your pawn to:/)
                 game.player_action
               end
+            end
+          end
+        end
+
+        context 'when the move does not capture a piece and the player piece is not a pawn' do
+          10.times do
+            it 'adds 1 to the number of idle moves' do
+              game.instance_variable_set(:@board, [movable_piece])
+              game.player_action
+              idle_moves = game.instance_variable_get(:@idle_moves)
+              expect(idle_moves).to eql(random_idle_moves + 1)
             end
           end
         end

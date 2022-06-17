@@ -73,9 +73,9 @@ class Game
   def take_turn(target_piece)
     @move_num += 1
     target_piece.move(@board, @move_num)
-    capture_index = index_to_capture(target_piece)
-    @idle_moves = capture_index || target_piece.is_a?(Pawn) ? 0 : @idle_moves + 1
-    capture_piece(capture_index)
+    capture_ind = index_to_capture(target_piece)
+    @idle_moves = capture_ind || target_piece.is_a?(Pawn) ? 0 : @idle_moves + 1
+    capture_piece(capture_ind)
     promote(target_piece) if target_piece.is_a?(Pawn) && target_piece.promoting
     @curr_player_index ^= 1
     update_history

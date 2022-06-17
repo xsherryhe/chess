@@ -23,8 +23,8 @@ module BaseMethods
     end
   end
 
-  def capture_piece(capture_index, board = @board)
-    board.delete_at(capture_index) if capture_index
+  def capture_piece(capture_ind, board = @board)
+    board.delete_at(capture_ind) if capture_ind
   end
 
   def to_pos(input)
