@@ -112,6 +112,129 @@ describe Game do
     end
   end
 
+  describe '#display_draw_claim_state' do
+    let(:game_history_position) do
+      Array.new(rand(50)) { (('A'..'Z').to_a + ('a'..'z').to_a).sample }.join
+    end
+
+    before do
+      allow(game).to receive(:puts)
+      game.instance_variable_set(:@history, [game_history_position] * rand(5))
+      game.instance_variable_set(:@idle_moves, rand(200))
+      allow(game).to receive(:gets).and_return(%w[YES yes Y y].sample)
+    end
+
+    context 'when the game history includes a repetition of positions at least three times' do
+      before do
+        game.instance_variable_set(:@history, [game_history_position] * rand(3..30))
+      end
+
+      10.times do
+        it 'displays a repetition of positions message and prompts the user to claim a draw' do
+          expect(game).to receive(:puts).with(/The same position with the same player to move has been repeated at least 3 times in the game/)
+          expect(game).to receive(:puts).with(/do you wish to claim a draw\?/)
+          game.display_draw_claim_state
+        end
+      end
+
+      context 'when the user confirms that they wish to claim a draw' do
+        10.times do
+          it 'outputs a draw message' do
+            expect(game).to receive(:puts).with('The game ends in a draw.')
+            game.display_draw_claim_state
+          end
+
+          it 'ends the game' do
+            game.display_draw_claim_state
+            game_over = game.instance_variable_get(:@game_over)
+            expect(game_over).to be true
+          end
+        end
+      end
+
+      context 'when the user does not confirm that they wish to claim a draw' do
+        before do
+          allow(game).to receive(:gets).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
+        end
+
+        10.times do
+          it 'does not output a draw message' do
+            expect(game).not_to receive(:puts).with('The game ends in a draw.')
+            game.display_draw_claim_state
+          end
+
+          it 'does not end the game' do
+            game.display_draw_claim_state
+            game_over = game.instance_variable_get(:@game_over)
+            expect(game_over).not_to be true
+          end
+        end
+      end
+    end
+
+    context 'when there have been 50 moves by both players without a piece captured or pawn move' do
+      before do
+        game.instance_variable_set(:@idle_moves, rand(100..200))
+      end
+
+      10.times do
+        it 'displays a 50 moves message and prompts the user to claim a draw' do
+          expect(game).to receive(:puts).with(/there have been 50 consecutive moves of both players without any piece taken or any pawn move/i)
+          expect(game).to receive(:puts).with(/do you wish to claim a draw\?/)
+          game.display_draw_claim_state
+        end
+      end
+
+      context 'when the user confirms that they wish to claim a draw' do
+        10.times do
+          it 'outputs a draw message' do
+            expect(game).to receive(:puts).with('The game ends in a draw.')
+            game.display_draw_claim_state
+          end
+
+          it 'ends the game' do
+            game.display_draw_claim_state
+            game_over = game.instance_variable_get(:@game_over)
+            expect(game_over).to be true
+          end
+        end
+      end
+
+      context 'when the user does not confirm that they wish to claim a draw' do
+        before do
+          allow(game).to receive(:gets).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
+        end
+
+        10.times do
+          it 'does not output a draw message' do
+            expect(game).not_to receive(:puts).with('The game ends in a draw.')
+            game.display_draw_claim_state
+          end
+
+          it 'does not end the game' do
+            game.display_draw_claim_state
+            game_over = game.instance_variable_get(:@game_over)
+            expect(game_over).not_to be true
+          end
+        end
+      end
+    end
+
+    context 'when no conditions are fulfilled that allow a draw claim' do
+      before do
+        game.instance_variable_set(:@history, [game_history_position] * rand(3))
+        game.instance_variable_set(:@idle_moves, rand(100))
+      end
+
+      10.times do
+        it 'does not prompt the user to claim a draw' do
+          expect(game).not_to receive(:puts).with(/do you wish to claim a draw\?/)
+          game.display_draw_claim_state
+        end
+      end
+    end
+  end
+
   describe '#display_mate_state' do
     let(:mated_player_index) { rand(2) }
     let(:mated_player) { [white_player, black_player][mated_player_index] }
