@@ -125,6 +125,22 @@ describe Pawn do
       end
     end
 
+    context 'when a legal position in the final row is entered' do
+      let(:final_row_position) { [random_position.first, 7 * (player_index ^ 1)] }
+      let(:final_row_position_input) do
+        ('a'..'h').to_a[final_row_position.first] + (final_row_position.last + 1).to_s
+      end
+
+      10.times do
+        it "changes the pawn's promoting instance variable to true" do
+          pawn.instance_variable_set(:@position, [random_position.first, [6, 1][player_index]])
+          allow(pawn).to receive(:gets).and_return(final_row_position_input)
+          pawn.move([], random_move_num)
+          expect(pawn.promoting).to be true
+        end
+      end
+    end
+
     context 'when a double-step position is entered' do
       let(:double_step_position) { [pawn.position.first, pawn.position.last + [2, -2][player_index]] }
       let(:double_step_position_input) do

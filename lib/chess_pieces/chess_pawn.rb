@@ -17,8 +17,8 @@ class Pawn < Piece
   def move(board, move_num)
     new_pos = valid_pos_input(board, move_num)
     @double_step = move_num if new_pos == double_step_pos
+    @promoting = true if new_pos.last == 7 * (player_index ^ 1)
     @position = new_pos
-    @promoting = true if position.last == 7 * (player_index ^ 1)
   end
 
   def next_positions(board, move_num)

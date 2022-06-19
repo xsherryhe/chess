@@ -22,3 +22,4 @@ Basic game
 Save state
   -Save the board with all the info about the pieces
 Testing
+Computer player with random moves
