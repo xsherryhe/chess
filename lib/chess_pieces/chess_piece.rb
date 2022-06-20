@@ -38,14 +38,15 @@ class Piece
     end.flatten(1)
   end
 
-  def serialize
+  def to_yaml
     YAML.dump(serialize_vals)
   end
 
   private
 
   def serialize_vals
-    { player_index: @player_index, position: @position }
+    { class: self.class,
+      data: { :@player_index => @player_index, :@position => @position } }
   end
 
   def king_in_check?(king, next_pos, board, move_num)

@@ -84,7 +84,7 @@ describe Game do
     before do
       allow(King).to receive(:new).with(checked_player_index, anything).and_return(king_to_check)
       allow(king_to_check).to receive(:is_a?).with(King).and_return(true)
-      allow(king_to_check).to receive(:serialize).and_return('')
+      allow(king_to_check).to receive(:to_yaml).and_return('')
       allow(King).to receive(:new).with(checked_player_index ^ 1, anything).and_call_original
       allow(game).to receive(:puts)
       allow(game).to receive(:gets).and_return('')
@@ -244,7 +244,7 @@ describe Game do
     before do
       allow(King).to receive(:new).with(mated_player_index, anything).and_return(king_to_mate)
       allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
-      allow(king_to_mate).to receive(:serialize).and_return('')
+      allow(king_to_mate).to receive(:to_yaml).and_return('')
       allow(King).to receive(:new).with(mated_player_index ^ 1, anything).and_call_original
       allow(game).to receive(:puts)
       allow(game).to receive(:display_board)
@@ -519,7 +519,7 @@ describe Game do
         game.instance_variable_set(:@board, test_board)
         game.instance_variable_set(:@move_num, random_move_num)
         game.instance_variable_set(:@idle_moves, random_idle_moves)
-        allow(movable_piece).to receive(:serialize).and_return('')
+        allow(movable_piece).to receive(:to_yaml).and_return('')
         allow(movable_piece).to receive(:legal_next_positions).and_return([piece_next_position])
         allow(movable_piece).to receive(:move) do
           allow(movable_piece).to receive(:position).and_return(piece_next_position)
@@ -677,7 +677,7 @@ describe Game do
 
         10.times do
           it 'prompts the user to enter a position until a valid position is entered' do
-            allow(unmovable_piece).to receive(:serialize).and_return('')
+            allow(unmovable_piece).to receive(:to_yaml).and_return('')
             allow(unmovable_piece).to receive(:legal_next_positions).and_return([])
             invalid_count = rand(1..100)
             call_count = 0

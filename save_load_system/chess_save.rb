@@ -1,31 +1,11 @@
-module SaveLoad
+module Save
   private
-
-  def save_dir
-    "#{File.dirname(File.expand_path('.'))}/saves"
-  end
-
-  def save_record
-    "#{save_dir}/save_record.txt"
-  end
-
-  def existing_save_name(name)
-    Regexp.new("^#{name}$", true) =~ File.read(save_record)
-  end
-
-  def display_saved_games
-    puts "SAVED GAMES:\r\n"
-    File.readlines(save_record).each do |save|
-      puts "  -#{save}"
-    end
-    puts "\r\n"
-  end
 
   def save_game
     set_up_save_location
     return unless (name = save_name)
 
-    update_save_record(name)
+    update_save_record(name, true)
     File.write("#{save_dir}/#{name}.yaml", to_yaml)
     puts "Game \"#{name}\" successfully saved!"
 
@@ -43,7 +23,7 @@ module SaveLoad
 
   def new_save_name(max_length)
     loop do
-      puts 'Type GO BACK to resume your game without saving.'
+      puts 'Type GO BACK to return to the menu without saving.'
       puts "Please type a name for your save file (max #{max_length} " \
            'characters, letters and numbers only, no spaces).'
       return unless (name = valid_save_name(max_length))
@@ -59,7 +39,7 @@ module SaveLoad
     loop do
       name = gets.chomp
       return if name.downcase == 'go back'
-      return name if name =~ Regexp.new("^\w{1,#{max_length}}$")
+      return name if name =~ Regexp.new("^\\w{1,#{max_length}}$")
 
       puts save_name_error(name, max_length)
     end
@@ -73,7 +53,7 @@ module SaveLoad
     end
 
     if name =~ /[^\w]/
-      error += "\r\nPlease enter a save name consisting of letters/numbers only."
+      error += "\r\nPlease enter a save name using letters/numbers only."
     end
 
     error
@@ -105,9 +85,12 @@ module SaveLoad
     gets.chomp =~ /^yes$|^y$|^go back$/i
   end
 
-  def update_save_record(name)
-  end
-
   def offer_game_exit
+    @menu_done = true
+    puts 'Exit to main menu? Y/N'
+    return @game_over = true if gets.chomp =~ /^yes$|^y$/i
+
+    puts 'Press ENTER to continue the current game.'
+    gets
   end
 end

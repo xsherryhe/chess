@@ -6,7 +6,7 @@ require_relative './chess_board.rb'
 require_relative './chess_promotion.rb'
 require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
-require_relative './chess_save_load.rb'
+require_relative '../save_load_system/chess_save_load.rb'
 
 class Game
   include BaseMethods
@@ -16,8 +16,8 @@ class Game
   include GameConditions
   include SaveLoad
 
-  def initialize
-    @players = [0, 1].map { |player_index| Player.new(player_index) }
+  def initialize(players = [0, 1].map { |player_ind| Player.new(player_ind) })
+    @players = players
     @curr_player_index = 0
     @board = []
     insert_starting_board
@@ -106,7 +106,16 @@ class Game
   end
 
   def update_history
-    @history << YAML.dump(curr_player_index: @curr_player_index,
-                          board: @board.map(&:serialize).sort)
+    @history << YAML.dump(:@curr_player_index => @curr_player_index,
+                          :@board => @board.map(&:to_yaml).sort)
+  end
+
+  def to_yaml
+    data = instance_variables.each_with_object({}) do |var, obj|
+      val = instance_variable_get(var)
+      obj[var] = %i[@players @board].include?(var) ? val.map(&:to_yaml) : val
+    end
+
+    YAML.dump(data)
   end
 end

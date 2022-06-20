@@ -45,7 +45,9 @@ class King < Piece
   private
 
   def serialize_vals
-    super.merge({ moved: @moved })
+    super.merge(data: { :@moved => @moved }) do |_, super_d, new_d|
+      super_d.merge(new_d)
+    end
   end
 
   def move_with_castle(rooks, board, move_num)

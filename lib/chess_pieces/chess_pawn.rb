@@ -33,7 +33,10 @@ class Pawn < Piece
   private
 
   def serialize_vals
-    super.merge({ double_step: @double_step, en_passant: @en_passant })
+    super.merge(data: { :@double_step => @double_step,
+                        :@en_passant => @en_passant }) do |_, super_d, new_d|
+      super_d.merge(new_d)
+    end
   end
 
   def capture_positions(board, move_num)

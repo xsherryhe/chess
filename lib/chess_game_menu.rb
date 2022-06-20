@@ -28,6 +28,7 @@ module GameMenu
     when /^1$|^help$/i then view_game_instructions
     when /^2$|^resign$/i then resign_game
     when /^3$|^draw$/i then propose_draw
+    when /^4$|^save$/i then save_game
     when /^7$|^back$/i then @menu_done = true
     else puts 'Invalid input!'
     end
