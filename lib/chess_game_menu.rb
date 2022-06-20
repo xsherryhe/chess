@@ -1,4 +1,7 @@
+require_relative '../save_load_system/chess_save.rb'
+
 module GameMenu
+  include Save
   private
 
   def game_menu_instruction

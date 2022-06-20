@@ -6,7 +6,7 @@ require_relative './chess_board.rb'
 require_relative './chess_promotion.rb'
 require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
-require_relative '../save_load_system/chess_save_load.rb'
+require_relative './chess_game_serialization.rb'
 
 class Game
   include BaseMethods
@@ -14,17 +14,10 @@ class Game
   include Promotion
   include GameMenu
   include GameConditions
-  include SaveLoad
+  include GameSerialization
 
-  def initialize(players = [0, 1].map { |player_ind| Player.new(player_ind) })
-    @players = players
-    @curr_player_index = 0
-    @board = []
-    insert_starting_board
-    @move_num = 0
-    @idle_moves = 0
-    @history = []
-    update_history
+  def initialize(file = nil)
+    file ? from_yaml(file) : start_game_setup
   end
 
   def play
@@ -44,6 +37,17 @@ class Game
   end
 
   private
+
+  def start_game_setup
+    @players = [0, 1].map { |player_ind| Player.new(player_ind) }
+    @curr_player_index = 0
+    @board = []
+    insert_starting_board
+    @move_num = 0
+    @idle_moves = 0
+    @history = []
+    update_history
+  end
 
   def curr_player
     @players[@curr_player_index]
@@ -108,14 +112,5 @@ class Game
   def update_history
     @history << YAML.dump(:@curr_player_index => @curr_player_index,
                           :@board => @board.map(&:to_yaml).sort)
-  end
-
-  def to_yaml
-    data = instance_variables.each_with_object({}) do |var, obj|
-      val = instance_variable_get(var)
-      obj[var] = %i[@players @board].include?(var) ? val.map(&:to_yaml) : val
-    end
-
-    YAML.dump(data)
   end
 end

@@ -1,10 +1,13 @@
+require_relative './chess_save_load_base.rb'
+
 module Save
+  include SaveLoadBaseMethods
   private
 
   def save_game
-    set_up_save_location
     return unless (name = save_name)
 
+    set_up_save_location
     update_save_record(name, true)
     File.write("#{save_dir}/#{name}.yaml", to_yaml)
     puts "Game \"#{name}\" successfully saved!"
@@ -18,7 +21,7 @@ module Save
   end
 
   def save_name
-    Dir.glob("#{save_dir}/*").size < 21 ? new_save_name(15) : overwrite_name
+    Dir.glob("#{save_dir}/*").size < 21 ? new_save_name(15) : overwrite_name(15)
   end
 
   def new_save_name(max_length)
@@ -35,38 +38,14 @@ module Save
     end
   end
 
-  def valid_save_name(max_length)
-    loop do
-      name = gets.chomp
-      return if name.downcase == 'go back'
-      return name if name =~ Regexp.new("^\\w{1,#{max_length}}$")
-
-      puts save_name_error(name, max_length)
-    end
-  end
-
-  def save_name_error(name, max_length)
-    error = 'Error!'
-    unless name.length.between?(1, max_length)
-      error += "\r\nPlease enter a save name between " \
-               "1 and #{max_length} characters."
-    end
-
-    if name =~ /[^\w]/
-      error += "\r\nPlease enter a save name using letters/numbers only."
-    end
-
-    error
-  end
-
-  def overwrite_name
+  def overwrite_name(max_length)
     display_saved_games
     puts 'Your save folder is full.'
 
     loop do
       puts 'Please type the name of an existing save file to overwrite, ' \
            'or type GO BACK to resume your game without saving.'
-      return unless (name = valid_save_name(15))
+      return unless (name = valid_save_name(max_length))
 
       save_exists = existing_save_name(name)
       return name if save_exists && confirm_overwrite(name)
