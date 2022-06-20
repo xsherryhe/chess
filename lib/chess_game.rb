@@ -6,6 +6,7 @@ require_relative './chess_board.rb'
 require_relative './chess_promotion.rb'
 require_relative './chess_game_menu.rb'
 require_relative './chess_game_conditions.rb'
+require_relative './chess_save_load.rb'
 
 class Game
   include BaseMethods
@@ -13,6 +14,7 @@ class Game
   include Promotion
   include GameMenu
   include GameConditions
+  include SaveLoad
 
   def initialize
     @players = [0, 1].map { |player_index| Player.new(player_index) }

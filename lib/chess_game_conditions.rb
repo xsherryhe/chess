@@ -3,7 +3,7 @@ module GameConditions
     return unless check
 
     puts color_message('check') + '. (Press ENTER to continue).'
-    gets.chomp
+    gets
   end
 
   def display_draw_claim_state
@@ -49,14 +49,14 @@ module GameConditions
   def draw_claim_refusal
     puts "#{curr_player.name} does NOT claim a draw. The game continues."
     puts 'Press ENTER to continue.'
-    gets.chomp
+    gets
   end
 
   def draw_propose_refusal
     puts "#{curr_opponent.name} does not accept the proposal of draw. " \
          'The current game will continue.'
     puts 'Press ENTER to continue.'
-    gets.chomp
+    gets
   end
 
   def no_legal_moves

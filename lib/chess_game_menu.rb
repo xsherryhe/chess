@@ -36,7 +36,7 @@ module GameMenu
   def view_game_instructions
     puts "\r\n" + chess_introduction + "\r\n\r\n" + pos_input_instruction
     puts 'Press ENTER to continue.'
-    gets.chomp
+    gets
   end
 
   def resign_game
