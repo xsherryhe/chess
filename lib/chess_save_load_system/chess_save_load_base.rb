@@ -2,7 +2,7 @@ module SaveLoadBaseMethods
   private
 
   def save_dir
-    "#{File.expand_path('..', __dir__)}/saves"
+    "#{File.expand_path('../..', __dir__)}/saves"
   end
 
   def save_record

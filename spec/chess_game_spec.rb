@@ -346,7 +346,7 @@ describe Game do
         end
 
         it 'outputs a list of game menu options' do
-          expect(game).to receive(:puts).with(/Enter one of the following words to select the corresponding option:/)
+          expect(game).to receive(:puts).with(/Enter one of the following commands:/)
           game.player_action
         end
       end
