@@ -5,9 +5,9 @@ module Save
   private
 
   def save_game
+    set_up_save_location
     return unless (name = save_name)
 
-    set_up_save_location
     update_save_record(name, true)
     File.write("#{save_dir}/#{name}.yaml", to_yaml)
     puts "Game \"#{name}\" successfully saved!"

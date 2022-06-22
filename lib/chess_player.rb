@@ -8,7 +8,12 @@ class Player
   end
 
   def to_yaml
-    YAML.dump(:@player_index => @player_index, :@name => @name)
+    YAML.dump('player_index' => @player_index, 'name' => @name)
+  end
+
+  def self.from_yaml(string)
+    data = YAML.safe_load(string)
+    new(data['player_index'], data['name'])
   end
 
   private

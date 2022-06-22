@@ -1,7 +1,10 @@
 require_relative '../save_load_system/chess_save.rb'
+require_relative '../save_load_system/chess_load.rb'
 
 module GameMenu
   include Save
+  include Load
+
   private
 
   def game_menu_instruction
@@ -32,6 +35,7 @@ module GameMenu
     when /^2$|^resign$/i then resign_game
     when /^3$|^draw$/i then propose_draw
     when /^4$|^save$/i then save_game
+    when /^5$|^load$/i then load_game
     when /^7$|^back$/i then @menu_done = true
     else puts 'Invalid input!'
     end

@@ -16,8 +16,17 @@ class Game
   include GameConditions
   include GameSerialization
 
-  def initialize(file = nil)
-    file ? from_yaml(file) : start_game_setup
+  def initialize(custom_setup = false)
+    return if custom_setup
+
+    @players = [0, 1].map { |player_ind| Player.new(player_ind) }
+    @curr_player_index = 0
+    @board = []
+    insert_starting_board
+    @move_num = 0
+    @idle_moves = 0
+    @history = []
+    update_history
   end
 
   def play
@@ -37,17 +46,6 @@ class Game
   end
 
   private
-
-  def start_game_setup
-    @players = [0, 1].map { |player_ind| Player.new(player_ind) }
-    @curr_player_index = 0
-    @board = []
-    insert_starting_board
-    @move_num = 0
-    @idle_moves = 0
-    @history = []
-    update_history
-  end
 
   def curr_player
     @players[@curr_player_index]
@@ -110,7 +108,10 @@ class Game
   end
 
   def update_history
-    @history << YAML.dump(:@curr_player_index => @curr_player_index,
-                          :@board => @board.map(&:to_yaml).sort)
+    @history << YAML.dump('curr_player_index' => @curr_player_index,
+                          'board' => @board.map(&:to_yaml).sort)
   end
 end
+
+game = Game.new
+game.play

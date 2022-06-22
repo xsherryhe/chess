@@ -1,5 +1,7 @@
 # frozen_string_literal: true
-require 'yaml'
+Dir[__dir__ + '/*.rb'].sort.each do |file|
+  require file unless file.include?('piece')
+end
 require_relative '.././chess_base.rb'
 
 class Piece
@@ -42,11 +44,22 @@ class Piece
     YAML.dump(serialize_vals)
   end
 
+  def self.from_yaml(string)
+    piece_class, data = YAML.safe_load(string).values
+    piece = Module.const_get(piece_class).new(data['player_index'],
+                                              data['position'])
+    data.each do |key, val|
+      var = ('@' + key).to_sym
+      piece.instance_variable_set(var, val)
+    end
+    piece
+  end
+
   private
 
   def serialize_vals
-    { class: self.class,
-      data: { :@player_index => @player_index, :@position => @position } }
+    { 'class' => self.class.name,
+      'data' => { 'player_index' => @player_index, 'position' => @position } }
   end
 
   def king_in_check?(king, next_pos, board, move_num)

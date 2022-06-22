@@ -9,6 +9,14 @@ module SaveLoadBaseMethods
     "#{save_dir}/save_record.txt"
   end
 
+  def save_dir_exists
+    return true if Dir.exist?(save_dir) && !Dir.empty?(save_dir)
+
+    puts 'You have no saved games. Press ENTER to return to the menu.'
+    gets
+    false
+  end
+
   def existing_save_name(name)
     Regexp.new("^#{name}$", true) =~ File.read(save_record)
   end
@@ -23,7 +31,7 @@ module SaveLoadBaseMethods
 
   def update_save_record(name, add)
     record = File.readlines(save_record)
-    record.reject! { |save| save.downcase == name.downcase }
+    record.reject! { |save| Regexp.new("^#{name}$", true) =~ save }
     record << name if add
     File.open(save_record, 'w') do |record_file|
       record.each { |save| record_file.puts(save) }

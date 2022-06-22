@@ -45,8 +45,8 @@ class King < Piece
   private
 
   def serialize_vals
-    super.merge(data: { :@moved => @moved }) do |_, super_d, new_d|
-      super_d.merge(new_d)
+    super.merge('data' => { 'moved' => @moved }) do |_, sup_d, new_d|
+      sup_d.merge(new_d)
     end
   end
 

@@ -1,17 +1,21 @@
 require_relative './chess_save_load_base.rb'
-require_relative '../lib/chess.rb'
 
 module Load
   include SaveLoadBaseMethods
 
   def load_game
-    return unless (name = load_name)
+    return unless save_dir_exists && (name = load_name)
 
-    open_game = is_a?(Game)
-    @menu_done = true if open_game
-
+    puts "Game \"#{name}\" successfully loaded!"
+    puts 'Press ENTER to continue.'
+    gets
     file = save_dir + "/#{name}.yaml"
-    open_game ? from_yaml(file) : Game.new(file)
+
+    if is_a?(Game)
+      update_from_yaml(file)
+      @menu_done = true
+    else Game.from_yaml(file).play
+    end
   end
 
   private
