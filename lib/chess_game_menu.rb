@@ -3,7 +3,7 @@ require_relative '../save_load_system/chess_load.rb'
 
 module GameMenu
   include Save
-  include Load
+  include LoadAndDelete
 
   private
 
@@ -25,7 +25,8 @@ module GameMenu
        'RESIGN (Resign current game to opponent. This will end the game.)',
        'DRAW (Propose a draw of current game.)',
        'SAVE (Save the current game.)', 'LOAD (Load a different game.)',
-       'MAIN (Exit to main menu.)', 'BACK (Go back to current game.)']
+       'DELETE (Delete a saved game.)', 'MAIN (Exit to main menu.)',
+       'BACK (Go back to current game.)']
       .map.with_index(1) { |option, i| "  #{i}. #{option}" }.join("\r\n")
   end
 
@@ -36,7 +37,8 @@ module GameMenu
     when /^3$|^draw$/i then propose_draw
     when /^4$|^save$/i then save_game
     when /^5$|^load$/i then load_game
-    when /^7$|^back$/i then @menu_done = true
+    when /^6$|^delete$/i then delete_game
+    when /^8$|^back$/i then @menu_done = true
     else puts 'Invalid input!'
     end
   end

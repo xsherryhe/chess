@@ -9,15 +9,7 @@ module SaveLoadBaseMethods
     "#{save_dir}/save_record.txt"
   end
 
-  def save_dir_exists
-    return true if Dir.exist?(save_dir) && !Dir.empty?(save_dir)
-
-    puts 'You have no saved games. Press ENTER to return to the menu.'
-    gets
-    false
-  end
-
-  def existing_save_name(name)
+  def existing_save?(name)
     Regexp.new("^#{name}$", true) =~ File.read(save_record)
   end
 
@@ -36,29 +28,5 @@ module SaveLoadBaseMethods
     File.open(save_record, 'w') do |record_file|
       record.each { |save| record_file.puts(save) }
     end
-  end
-
-  def valid_save_name(max_length)
-    loop do
-      name = gets.chomp
-      return if name.downcase == 'go back'
-      return name if name =~ Regexp.new("^\\w{1,#{max_length}}$")
-
-      puts save_name_error(name, max_length)
-    end
-  end
-
-  def save_name_error(name, max_length)
-    error = 'Error!'
-    unless name.length.between?(1, max_length)
-      error += "\r\nPlease enter a string between " \
-               "1 and #{max_length} characters."
-    end
-
-    if name =~ /[^\w]/
-      error += "\r\nPlease enter a string using letters/numbers only."
-    end
-
-    error
   end
 end
