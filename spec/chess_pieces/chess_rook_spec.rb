@@ -39,21 +39,20 @@ describe Rook do
 
     before do
       allow(rook).to receive(:puts)
+      allow(rook).to receive(:gets).and_return(legal_position_input)
       allow(king).to receive(:is_a?).with(King).and_return(true)
       allow(king).to receive(:can_castle?).and_return(false)
     end
 
-    context 'when a legal position is entered' do
-      before do
-        allow(rook).to receive(:gets).and_return(legal_position_input)
+    10.times do
+      it 'prompts the user to enter a position' do
+        expect(rook).to receive(:puts).with(/Please enter the square to move the rook/)
+        rook.move(board, random_move_num)
       end
+    end
 
+    context 'when a legal position is entered' do
       10.times do
-        it 'prompts the user to enter a position' do
-          expect(rook).to receive(:puts).with(/Please enter the square to move the rook/)
-          rook.move(board, random_move_num)
-        end
-
         it "changes the rook's position to the new position" do
           rook.move(board, random_move_num)
           expect(rook.position).to eq(legal_position)

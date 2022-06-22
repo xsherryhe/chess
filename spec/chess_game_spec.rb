@@ -334,22 +334,26 @@ describe Game do
     end
 
     context 'when the word "menu" is entered' do
-      context 'when the word "back" or "7" is entered' do
-        before do
-          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 7].sample)
+      before do
+        allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 8].sample)
+      end
+
+      10.times do
+        it 'prompts the player for an input to determine their next action' do
+          prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
+          expect(game).to receive(:puts).with(prompt_reg)
+          game.player_action
         end
 
-        10.times do
-          it 'prompts the player for an input to determine their next action' do
-            prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
-            expect(game).to receive(:puts).with(prompt_reg)
-            game.player_action
-          end
+        it 'outputs a list of game menu options' do
+          expect(game).to receive(:puts).with(/Enter one of the following words to select the corresponding option:/)
+          game.player_action
+        end
+      end
 
-          it 'outputs a list of game menu options' do
-            expect(game).to receive(:puts).with(/Enter one of the following words to select the corresponding option:/)
-            game.player_action
-          end
+      context 'when the word "back" or "8" is entered' do
+        10.times do
+          it 'exits from the method' do; end
         end
       end
 
@@ -377,17 +381,19 @@ describe Game do
       end
 
       context 'when the word "resign" or "2" is entered' do
-        context 'when the player confirms that they wish to resign' do
-          before do
-            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[resign RESIGN 2].sample, %w[y Y yes YES].sample)
+        before do
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[resign RESIGN 2].sample, %w[y Y yes YES].sample)
+        end
+
+        10.times do
+          it 'outputs a warning to player' do
+            expect(game).to receive(:puts).with("WARNING: This will end the game.\r\nAre you sure you wish to resign the game to your opponent? (Y/N)")
+            game.player_action
           end
+        end
 
+        context 'when the player confirms that they wish to resign' do
           10.times do
-            it 'outputs a warning to player' do
-              expect(game).to receive(:puts).with("WARNING: This will end the game.\r\nAre you sure you wish to resign the game to your opponent? (Y/N)")
-              game.player_action
-            end
-
             it 'outputs an opponent win game message' do
               expect(game).to receive(:puts).with("#{opponent_player.name} has won the game!")
               game.player_action
@@ -407,11 +413,6 @@ describe Game do
           end
 
           10.times do
-            it 'outputs a warning to player' do
-              expect(game).to receive(:puts).with("WARNING: This will end the game.\r\nAre you sure you wish to resign the game to your opponent? (Y/N)")
-              game.player_action
-            end
-
             it 'does not output an opponent win game message' do
               expect(game).not_to receive(:puts).with("#{opponent_player.name} has won the game!")
               game.player_action
@@ -427,17 +428,19 @@ describe Game do
       end
 
       context 'when the word "draw" or "3" is entered' do
-        context 'when the opponent accepts the draw' do
-          before do
-            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[draw DRAW 3].sample, %w[y Y yes YES].sample)
+        before do
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[draw DRAW 3].sample, %w[y Y yes YES].sample)
+        end
+
+        10.times do
+          it 'prompts the opponent to accept or decline the draw' do
+            expect(game).to receive(:puts).with("#{opponent_player.name}, do you accept the proposal of draw?")
+            game.player_action
           end
+        end
 
+        context 'when the opponent accepts the draw' do
           10.times do
-            it 'prompts the opponent to accept or decline the draw' do
-              expect(game).to receive(:puts).with("#{opponent_player.name}, do you accept the proposal of draw?")
-              game.player_action
-            end
-
             it 'outputs a draw message' do
               expect(game).to receive(:puts).with('The game ends in a draw.')
               game.player_action
@@ -457,11 +460,6 @@ describe Game do
           end
 
           10.times do
-            it 'prompts the opponent to accept or decline the draw' do
-              expect(game).to receive(:puts).with("#{opponent_player.name}, do you accept the proposal of draw?")
-              game.player_action
-            end
-
             it 'does not output a draw message' do
               expect(game).not_to receive(:puts).with('The game ends in a draw.')
               game.player_action
@@ -579,13 +577,10 @@ describe Game do
 
             before do
               allow(movable_piece).to receive(:promoting).and_return(true)
+              allow(game).to receive(:gets).and_return(movable_piece_position_input, class_input.first)
             end
 
             context 'when the player enters a valid class to promote the pawn' do
-              before do
-                allow(game).to receive(:gets).and_return(movable_piece_position_input, class_input.first)
-              end
-
               10.times do
                 it 'resets number of idle moves to zero' do
                   game.player_action

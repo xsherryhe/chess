@@ -112,6 +112,3 @@ class Game
                           'board' => @board.map(&:to_yaml).sort)
   end
 end
-
-game = Game.new
-game.play

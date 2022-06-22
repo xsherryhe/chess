@@ -34,20 +34,19 @@ describe Knight do
 
     before do
       allow(knight).to receive(:puts)
+      allow(knight).to receive(:gets).and_return(legal_position_input)
       allow(knight).to receive(:player_king).and_return(instance_double(King, player_index: player_index, position: [-1, -1], checked?: false))
     end
 
-    context 'when a legal position is entered' do
-      before do
-        allow(knight).to receive(:gets).and_return(legal_position_input)
+    10.times do
+      it 'prompts the user to enter a position' do
+        expect(knight).to receive(:puts).with(/Please enter the square to move the knight/)
+        knight.move([], random_move_num)
       end
+    end
 
+    context 'when a legal position is entered' do
       10.times do
-        it 'prompts the user to enter a position' do
-          expect(knight).to receive(:puts).with(/Please enter the square to move the knight/)
-          knight.move([], random_move_num)
-        end
-
         it "changes the knight's position to the new position" do
           knight.move([], random_move_num)
           expect(knight.position).to eq(legal_position)

@@ -38,20 +38,19 @@ describe King do
 
     before do
       allow(king).to receive(:puts)
+      allow(king).to receive(:gets).and_return(legal_position_input)
       allow(king).to receive(:can_castle?).and_return(false)
     end
 
-    context 'when a legal position is entered' do
-      before do
-        allow(king).to receive(:gets).and_return(legal_position_input)
+    10.times do
+      it 'prompts the user to enter a position' do
+        expect(king).to receive(:puts).with(/Please enter the square to move the king/)
+        king.move(board, random_move_num)
       end
+    end
 
+    context 'when a legal position is entered' do
       10.times do
-        it 'prompts the user to enter a position' do
-          expect(king).to receive(:puts).with(/Please enter the square to move the king/)
-          king.move(board, random_move_num)
-        end
-
         it "changes the king's position to the new position" do
           king.move(board, random_move_num)
           expect(king.position).to eq(legal_position)
