@@ -3,13 +3,15 @@ require_relative './chess_save_load_base.rb'
 module LoadAndDelete
   include SaveLoadBaseMethods
 
+  private
+
   def load_game
     return unless check_saved_games && (name = existing_save_name('load'))
 
     puts "Game \"#{name}\" successfully loaded!"
     puts 'Press ENTER to continue.'
     gets
-    file = save_dir + "/#{name}.yaml"
+    file = "#{save_dir}/#{name}.yaml"
 
     if is_a?(Game)
       update_from_yaml(file)
@@ -25,23 +27,27 @@ module LoadAndDelete
       return unless (name = existing_save_name('delete'))
 
       update_save_record(name, false)
-      File.delete(save_dir + "/#{name}.yaml")
+      File.delete("#{save_dir}/#{name}.yaml")
       puts "Game \"#{name}\" successfully deleted!"
-      break unless delete_another_game?
+      return exit_to_menu unless delete_another_game?
     end
-
-    puts 'Press ENTER to return to the menu.'
-    gets
   end
 
-  private
-
   def any_saved_games?
-    Dir.exist?(save_dir) && !Dir.glob(save_dir + '/*.yaml').empty?
+    Dir.exist?(save_dir) && !Dir.glob("#{save_dir}/*.yaml").empty?
   end
 
   def check_saved_games
-    any_saved_games? ? true : (puts 'You have no saved games.')
+    return true if any_saved_games?
+
+    puts 'You have no saved games.'
+    exit_to_menu
+    false
+  end
+
+  def exit_to_menu
+    puts 'Press ENTER to return to the menu.'
+    gets
   end
 
   def existing_save_name(action)

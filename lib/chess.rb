@@ -23,7 +23,7 @@ module Chess
     "\r\nMAIN MENU: What would you like to do?\r\n" \
     "Enter one of the following commands:\r\n" +
       ['NEW (Start a new game.)',
-       'LOAD (Load a previous game.)',
+       'LOAD (Load a saved game.)',
        'DELETE (Delete a saved game.)',
        'HELP (View instructions.)',
        'EXIT (Exit the program.)']
@@ -36,5 +36,3 @@ module Chess
     gets
   end
 end
-
-Chess.run

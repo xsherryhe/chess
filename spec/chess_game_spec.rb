@@ -474,6 +474,109 @@ describe Game do
         end
       end
 
+      context 'when the word "save" or "4" is entered' do
+        let(:legal_save_name) { %w[save1 SAVE1 123 test].sample }
+        let(:mock_save_dir) { "#{__dir__}/mock_saves" }
+        let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
+
+        def clear_save_record
+          File.write(mock_save_record, '')
+        end
+
+        def clear_save_dir
+          Dir.foreach(mock_save_dir) do |file|
+            unless %w[. .. mock_save_record.txt].include?(file)
+              File.delete("#{mock_save_dir}/#{file}")
+            end
+          end
+        end
+
+        before do
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[save SAVE 4].sample, legal_save_name, %w[y Y yes YES].sample)
+          allow(game).to receive(:save_dir).and_return(mock_save_dir)
+          allow(game).to receive(:save_record).and_return(mock_save_record)
+          allow(Dir).to receive(:mkdir)
+        end
+
+        context 'when the save directory and record have not been created' do
+          before do
+            allow(Dir).to receive(:exist?).with(mock_save_dir).and_return(false)
+            allow(File).to receive(:exist?).with(mock_save_record).and_return(false)
+            allow(File).to receive(:write)
+          end
+
+          it 'creates a save directory and record' do
+            expect(Dir).to receive(:mkdir).with(mock_save_dir)
+            expect(File).to receive(:write).with(mock_save_record, '')
+            game.player_action
+          end
+        end
+
+        context 'when the save directory and record already exist' do
+          before do
+            allow(Dir).to receive(:exist?).with(mock_save_dir).and_return(true)
+            allow(File).to receive(:exist?).with(mock_save_record).and_return(true)
+            allow(File).to receive(:write)
+          end
+
+          it 'does not create a save directory and record' do
+            expect(Dir).not_to receive(:mkdir).with(mock_save_dir)
+            expect(File).not_to receive(:write).with(mock_save_record, '')
+            game.player_action
+          end
+        end
+
+        context 'when the save directory has fewer than 20 saved files' do
+          let(:mock_save_dir_glob) { Array.new(rand(20), '') }
+
+          before do
+            allow(Dir).to receive(:glob).with("#{mock_save_dir}/*.yaml").and_return(mock_save_dir_glob)
+          end
+
+          context 'when a legal save name is entered' do
+            10.times do
+              it 'adds the save name to the save record' do
+                clear_save_record
+                game.player_action
+                save_record = File.read(mock_save_record)
+                expect(save_record).to include(legal_save_name)
+                clear_save_record
+              end
+
+              it 'creates a yaml file with the serialized game' do
+                clear_save_dir
+                game.player_action
+                file_exist = File.exist?("#{mock_save_dir}/#{legal_save_name}.yaml")
+                expect(file_exist).to be true
+                clear_save_dir
+              end
+
+              it 'outputs a save success message' do
+                expect(game).to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                game.player_action
+              end
+
+              it 'offers the user to exit the game' do
+                expect(game).to receive(:puts).with('Exit to main menu? Y/N')
+                game.player_action
+              end
+            end
+          end
+          
+          context 'when the words "go back" are entered' do
+            
+          end
+
+          context 'while an invalid input is entered' do
+            
+          end
+        end
+
+        context 'when the save directory is full (i.e. has 20 saved files)' do
+          
+        end
+      end
+
       context 'while an invalid input is entered' do
         10.times do
           it 'prompts the user to enter an input until a valid input is entered' do

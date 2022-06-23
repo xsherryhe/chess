@@ -2,6 +2,7 @@ require_relative './chess_save_load_base.rb'
 
 module Save
   include SaveLoadBaseMethods
+
   private
 
   def save_game
@@ -21,7 +22,7 @@ module Save
   end
 
   def save_name
-    Dir.glob("#{save_dir}/*").size < 21 ? new_save_name(15) : overwrite_name
+    Dir.glob("#{save_dir}/*.yaml").size < 20 ? new_save_name(15) : overwrite_name
   end
 
   def new_save_name(max_length)
