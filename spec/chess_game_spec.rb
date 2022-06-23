@@ -480,7 +480,7 @@ describe Game do
         let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
 
         def clear_save_record
-          File.write(mock_save_record, '')
+          File.write(mock_save_record, ' ')
         end
 
         def clear_save_dir
@@ -496,6 +496,13 @@ describe Game do
           allow(game).to receive(:save_dir).and_return(mock_save_dir)
           allow(game).to receive(:save_record).and_return(mock_save_record)
           allow(Dir).to receive(:mkdir)
+          clear_save_record
+          clear_save_dir
+        end
+
+        after do
+          clear_save_record
+          clear_save_dir
         end
 
         context 'when the save directory and record have not been created' do
@@ -527,28 +534,18 @@ describe Game do
         end
 
         context 'when the save directory has fewer than 20 saved files' do
-          let(:mock_save_dir_glob) { Array.new(rand(20), '') }
-
-          before do
-            allow(Dir).to receive(:glob).with("#{mock_save_dir}/*.yaml").and_return(mock_save_dir_glob)
-          end
-
           context 'when a legal save name is entered' do
             10.times do
               it 'adds the save name to the save record' do
-                clear_save_record
                 game.player_action
                 save_record = File.read(mock_save_record)
                 expect(save_record).to include(legal_save_name)
-                clear_save_record
               end
 
               it 'creates a yaml file with the serialized game' do
-                clear_save_dir
                 game.player_action
                 file_exist = File.exist?("#{mock_save_dir}/#{legal_save_name}.yaml")
                 expect(file_exist).to be true
-                clear_save_dir
               end
 
               it 'outputs a save success message' do
@@ -562,38 +559,107 @@ describe Game do
               end
             end
           end
-          
+
           context 'when the words "go back" are entered' do
-            
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[save SAVE 4].sample, ['go back', 'GO BACK'].sample, %w[back BACK 8].sample)
+            end
+
+            it 'does not add anything to the save record' do
+              game.player_action
+              save_record = File.read(mock_save_record)
+              expect(save_record).to eq(' ')
+            end
+
+            it 'does not create a yaml file with the serialized game' do
+              game.player_action
+              dir_empty = Dir.glob("#{mock_save_dir}/*.yaml").select { |file| File.file?(file) }.empty?
+              expect(dir_empty).to be true
+            end
+
+            it 'does not output a save success message' do
+              expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+              game.player_action
+            end
+
+            it 'does not offer the user to exit the game' do
+              expect(game).not_to receive(:puts).with('Exit to main menu? Y/N')
+              game.player_action
+            end
           end
 
           context 'while an invalid input is entered' do
+            let(:invalid_count) { rand(100) }
+            before do
+              call_count = 0
+              allow(game).to receive(:gets) do
+                call_count += 1
+                case call_count
+                when 1 then %w[menu MENU].sample
+                when 2 then %w[save SAVE 4].sample
+                when invalid_count + 3 then legal_save_name
+                else invalid_inputs.sample
+                end
+              end
+            end
+
+            context 'while a save name that is too short or long is entered' do
+              let(:invalid_inputs) { ['0' * 20, ''] }
+              10.times do
+                it 'prompts the user to enter a save name that fits length requirements until it is entered' do
+                  expect(game).to receive(:puts).with("Error!\r\nPlease enter a string between 1 and 15 characters.").exactly(invalid_count).times
+                  game.player_action
+                end
+              end
+            end
+
+            context 'while a save name that contains non-letter/non-number characters is entered' do
+              let(:invalid_inputs) { [' ', '@saving', '(', 'test-123', 'my save!'] }
+              10.times do
+                it 'prompts the user to enter a letter/number-only save name until it is entered' do
+                  expect(game).to receive(:puts).with("Error!\r\nPlease enter a string using letters/numbers only.").exactly(invalid_count).times
+                  game.player_action
+                end
+              end
+            end
+
+            context 'while a save name that includes both errors is entered' do
+              let(:invalid_inputs) { [' ' * 30, '@saving' * 10, '(' * 20, 'test-123' * 15, 'my save!' * 12] }
+              10.times do
+                it 'prompts the user with both error messages until a legal save name is entered' do
+                  expect(game)
+                    .to receive(:puts)
+                    .with("Error!\r\nPlease enter a string between 1 and 15 characters.\r\nPlease enter a string using letters/numbers only.")
+                    .exactly(invalid_count).times
+                  game.player_action
+                end
+              end
+            end
+          end
+
+          context 'when the save directory is full (i.e. has 20 saved files)' do
             
           end
         end
 
-        context 'when the save directory is full (i.e. has 20 saved files)' do
-          
-        end
-      end
-
-      context 'while an invalid input is entered' do
-        10.times do
-          it 'prompts the user to enter an input until a valid input is entered' do
-            invalid_count = rand(100)
-            call_count = 0
-            invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
-            allow(game).to receive(:gets) do
-              call_count += 1
-              if call_count == 1
-                'menu'
-              elsif call_count == invalid_count + 2
-                'back'
-              else invalid_inputs.sample
+        context 'while an invalid input is entered' do
+          10.times do
+            it 'prompts the user to enter an input until a valid input is entered' do
+              invalid_count = rand(100)
+              call_count = 0
+              invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
+              allow(game).to receive(:gets) do
+                call_count += 1
+                if call_count == 1
+                  %w[menu MENU].sample
+                elsif call_count == invalid_count + 2
+                  %w[back BACK 8].sample
+                else invalid_inputs.sample
+                end
               end
+              expect(game).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
+              game.player_action
             end
-            expect(game).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
-            game.player_action
           end
         end
       end

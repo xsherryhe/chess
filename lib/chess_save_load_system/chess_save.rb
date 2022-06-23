@@ -22,7 +22,10 @@ module Save
   end
 
   def save_name
-    Dir.glob("#{save_dir}/*.yaml").size < 20 ? new_save_name(15) : overwrite_name
+    save_file_num = Dir.glob("#{save_dir}/*.yaml")
+                       .select { |file| File.file?(file) }
+                       .size
+    save_file_num < 20 ? new_save_name(15) : overwrite_name
   end
 
   def new_save_name(max_length)

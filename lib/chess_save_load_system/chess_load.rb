@@ -34,7 +34,8 @@ module LoadAndDelete
   end
 
   def any_saved_games?
-    Dir.exist?(save_dir) && !Dir.glob("#{save_dir}/*.yaml").empty?
+    Dir.exist?(save_dir) &&
+      !Dir.glob("#{save_dir}/*.yaml").select { |file| File.file?(file) }.empty?
   end
 
   def check_saved_games
