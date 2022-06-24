@@ -10,7 +10,7 @@ module SaveLoadBaseMethods
   end
 
   def existing_save?(name)
-    Regexp.new("^#{name}$", true) =~ File.read(save_record)
+    File.readlines(save_record).map(&:downcase).include?(name.downcase + "\n")
   end
 
   def display_saved_games
@@ -23,7 +23,7 @@ module SaveLoadBaseMethods
 
   def update_save_record(name, add)
     record = File.readlines(save_record)
-    record.reject! { |save| Regexp.new("^#{name}$", true) =~ save }
+    record.reject! { |save| name.downcase == save.downcase }
     record << name if add
     File.open(save_record, 'w') do |record_file|
       record.each { |save| record_file.puts(save) }

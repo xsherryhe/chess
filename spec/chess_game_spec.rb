@@ -534,6 +534,11 @@ describe Game do
         end
 
         context 'when the save directory has fewer than 20 saved files' do
+          it 'prompts the user to enter a new save name' do
+            expect(game).to receive(:puts).with(/Please type a name for your save file/)
+            game.player_action
+          end
+
           context 'when a legal save name is entered' do
             10.times do
               it 'adds the save name to the save record' do
@@ -614,7 +619,7 @@ describe Game do
             end
 
             context 'while a save name that contains non-letter/non-number characters is entered' do
-              let(:invalid_inputs) { [' ', '@saving', '(', 'test-123', 'my save!'] }
+              let(:invalid_inputs) { [' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
               10.times do
                 it 'prompts the user to enter a letter/number-only save name until it is entered' do
                   expect(game).to receive(:puts).with("Error!\r\nPlease enter a string using letters/numbers only.").exactly(invalid_count).times
@@ -636,30 +641,186 @@ describe Game do
               end
             end
           end
-
-          context 'when the save directory is full (i.e. has 20 saved files)' do
-            
-          end
         end
 
-        context 'while an invalid input is entered' do
-          10.times do
-            it 'prompts the user to enter an input until a valid input is entered' do
-              invalid_count = rand(100)
-              call_count = 0
-              invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
-              allow(game).to receive(:gets) do
-                call_count += 1
-                if call_count == 1
-                  %w[menu MENU].sample
-                elsif call_count == invalid_count + 2
-                  %w[back BACK 8].sample
-                else invalid_inputs.sample
+        context 'when the save directory is full (i.e. has 20 saved files)' do
+          let(:existing_save_name) { rand(20).to_s + %w[a A].sample }
+
+          before do
+            File.open(mock_save_record, 'w') do |record_file|
+              20.times { |i| record_file.puts("#{i}a") }
+            end
+            20.times { |i| File.write("#{mock_save_dir}/#{i}a.yaml", '') }
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
+                                                     %w[save SAVE 4].sample,
+                                                     existing_save_name,
+                                                     %w[y Y yes YES].sample,
+                                                     %w[y Y yes YES].sample)
+          end
+
+          it 'outputs a save folder full message' do
+            expect(game).to receive(:puts).with('Your save folder is full.')
+            game.player_action
+          end
+
+          it 'prompts the user to enter an existing save name to overwrite' do
+            expect(game).to receive(:puts).with(/Please type the name of an existing save file to overwrite/)
+            game.player_action
+          end
+
+          context 'when an existing save name is entered' do
+            10.times do
+              it 'prompts the user to confirm overwrite of the save' do
+                expect(game).to receive(:puts).with("Overwrite the save file named \"#{existing_save_name}\"? Y/N")
+                game.player_action
+              end
+            end
+
+            context 'when the save overwrite is confirmed' do
+              10.times do
+                it 'updates the corresponding yaml file with the serialized game' do
+                  game.player_action
+                  file = File.read("#{mock_save_dir}/#{existing_save_name}.yaml")
+                  expect(file).not_to eq('')
+                end
+
+                it 'outputs a save success message' do
+                  expect(game).to receive(:puts).with("Game \"#{existing_save_name}\" successfully saved!")
+                  game.player_action
+                end
+
+                it 'offers the user to exit the game' do
+                  expect(game).to receive(:puts).with('Exit to main menu? Y/N')
+                  game.player_action
                 end
               end
-              expect(game).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
-              game.player_action
             end
+
+            context 'while the save overwrite is not confirmed' do
+              10.times do
+                it 'prompts the user to enter an existing save name until an existing save name is entered and confirmed' do
+                  no_confirm_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[save SAVE 4].sample
+                    elsif call_count.odd? then existing_save_name
+                    elsif call_count == no_confirm_count * 2 + 4 then %w[y Y yes YES].sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+                  expect(game).to receive(:puts).with(/Please type the name of an existing save file to overwrite/).exactly(no_confirm_count + 1).times
+                  game.player_action
+                end
+              end
+            end
+          end
+
+          context 'when the words "go back" are entered' do
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[save SAVE 4].sample, ['go back', 'GO BACK'].sample, %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'does not update a yaml file with the serialized game' do
+                game.player_action
+                files = 20.times.map { |i| File.read("#{mock_save_dir}/#{i}a.yaml") }
+                expect(files).to all(eq(''))
+              end
+
+              it 'does not output a save success message' do
+                expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                game.player_action
+              end
+
+              it 'does not offer the user to exit the game' do
+                expect(game).not_to receive(:puts).with('Exit to main menu? Y/N')
+                game.player_action
+              end
+            end
+          end
+
+          context 'when an invalid input (i.e., non-existing save name) is entered' do
+            let(:non_existing_save_names) { ['save1', 'SAVE1', '123', 'test', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
+
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
+                                                       %w[save SAVE 4].sample,
+                                                       non_existing_save_names.sample,
+                                                       ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample,
+                                                       %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'prompts the user to confirm cancellation of a save overwrite' do
+                expect(game).to receive(:puts).with('There is no save file with this name. Resume game without saving? Y/N')
+                game.player_action
+              end
+            end
+
+            context 'when cancellation of the save overwrite is confirmed' do
+              10.times do
+                it 'does not update a yaml file with the serialized game' do
+                  game.player_action
+                  files = 20.times.map { |i| File.read("#{mock_save_dir}/#{i}a.yaml") }
+                  expect(files).to all(eq(''))
+                end
+
+                it 'does not output a save success message' do
+                  expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                  game.player_action
+                end
+
+                it 'does not offer the user to exit the game' do
+                  expect(game).not_to receive(:puts).with('Exit to main menu? Y/N')
+                  game.player_action
+                end
+              end
+            end
+
+            context 'while cancellation of the save overwrite is not confirmed' do
+              10.times do
+                it 'prompts the user to enter an existing save name cancellation of the save overwrite is confirmed' do
+                  no_cancel_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[save SAVE 4].sample
+                    elsif call_count == no_cancel_count * 2 + 5 then %w[back BACK 8].sample
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    elsif call_count == no_cancel_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of an existing save file to overwrite/).exactly(no_cancel_count + 1).times
+                  game.player_action
+                end
+              end
+            end
+          end
+        end
+      end
+
+      context 'while an invalid input is entered' do
+        10.times do
+          it 'prompts the user to enter an input until a valid input is entered' do
+            invalid_count = rand(100)
+            call_count = 0
+            invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
+            allow(game).to receive(:gets) do
+              call_count += 1
+              if call_count == 1
+                %w[menu MENU].sample
+              elsif call_count == invalid_count + 2
+                %w[back BACK 8].sample
+              else invalid_inputs.sample
+              end
+            end
+            expect(game).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
+            game.player_action
           end
         end
       end
