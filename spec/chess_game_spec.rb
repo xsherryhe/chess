@@ -334,7 +334,25 @@ describe Game do
     end
 
     context 'when the word "menu" is entered' do
+      let(:mock_save_dir) { "#{__dir__}/mock_saves" }
+      let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
+      let(:legal_save_name) { %w[save1 SAVE1 123 test].sample }
+
+      def clear_save_record
+        File.write(mock_save_record, ' ')
+      end
+
+      def clear_save_dir
+        Dir.foreach(mock_save_dir) do |file|
+          unless %w[. .. mock_save_record.txt].include?(file)
+            File.delete("#{mock_save_dir}/#{file}")
+          end
+        end
+      end
+
       before do
+        allow(game).to receive(:save_dir).and_return(mock_save_dir)
+        allow(game).to receive(:save_record).and_return(mock_save_record)
         allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 8].sample)
       end
 
@@ -475,26 +493,8 @@ describe Game do
       end
 
       context 'when the word "save" or "4" is entered' do
-        let(:legal_save_name) { %w[save1 SAVE1 123 test].sample }
-        let(:mock_save_dir) { "#{__dir__}/mock_saves" }
-        let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
-
-        def clear_save_record
-          File.write(mock_save_record, ' ')
-        end
-
-        def clear_save_dir
-          Dir.foreach(mock_save_dir) do |file|
-            unless %w[. .. mock_save_record.txt].include?(file)
-              File.delete("#{mock_save_dir}/#{file}")
-            end
-          end
-        end
-
         before do
           allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[save SAVE 4].sample, legal_save_name, %w[y Y yes YES].sample)
-          allow(game).to receive(:save_dir).and_return(mock_save_dir)
-          allow(game).to receive(:save_record).and_return(mock_save_record)
           allow(Dir).to receive(:mkdir)
           clear_save_record
           clear_save_dir
@@ -800,6 +800,101 @@ describe Game do
                 end
               end
             end
+          end
+        end
+      end
+
+      context 'when the word "load" or "5" is entered' do
+        before do
+          clear_save_record
+          clear_save_dir
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, legal_save_name, '')
+        end
+
+        after do
+          clear_save_record
+          clear_save_dir
+        end
+
+        context 'when there is at least one save file' do
+          let(:saved_game_board) do
+            Array.new(rand(32)) do
+              [King, Queen, Rook, Bishop, Knight, Pawn].sample.new(rand(2), Array.new(2) { rand(8) })
+            end
+          end
+          let(:saved_game_players) do
+            players = [instance_double(Player, name: rand(100).to_s, player_index: 0),
+                       instance_double(Player, name: rand(100).to_s, player_index: 1)]
+            players.each do |player|
+              allow(player).to receive(:to_yaml).and_return(YAML.dump('player_index' => player.player_index, 'name' => player.name))
+            end
+            players
+          end
+
+          before do
+            saved_game = described_class.new
+            saved_game.instance_variable_set(:@board, saved_game_board)
+            saved_game.instance_variable_set(:@players, saved_game_players)
+            allow(Player).to receive(:from_yaml) do |string|
+              data = YAML.safe_load(string)
+              instance_double(Player, name: data['name'], player_index: data['player_index'])
+            end
+            File.open(mock_save_record, 'w') { |file| file.puts(legal_save_name.downcase) }
+            File.write("#{mock_save_dir}/#{legal_save_name.downcase}.yaml", saved_game.to_yaml)
+          end
+
+          it 'prompts the user to enter the name of an existing save file' do
+            expect(game).to receive(:puts).with(/Please type the name of the game you wish to load/)
+            game.player_action
+          end
+
+          context 'when an existing save name is entered' do
+            10.times do
+              it 'updates the game with data from the corresponding file' do
+                def instance_vals(piece)
+                  piece.instance_variables.map { |var| game.instance_variable_get(var) }
+                end
+
+                game.player_action
+                board.each_with_index do |piece, i|
+                  vals = instance_vals(piece)
+                  saved_vals = instance_vals(saved_game_board[i])
+                  expect(vals).to eq(saved_vals)
+                end
+                game.instance_variable_get(:@players).each_with_index do |player, i|
+                  saved_player = saved_game_players[i]
+                  vals = [player.name, player.player_index]
+                  saved_vals = [saved_player.name, saved_player.player_index]
+                  expect(vals).to eq(saved_vals)
+                end
+              end
+
+              it 'outputs a load success message' do
+                expect(game).to receive(:puts).with("Game \"#{legal_save_name}\" successfully loaded!")
+                game.player_action
+              end
+            end
+          end
+
+          context 'when the words "go back" are entered' do
+          end
+
+          context 'when an invalid input (i.e., non-existing save name) is entered' do
+
+          end
+        end
+
+        context 'when there are no save files' do
+          it 'outputs a no save files message' do
+            
+          end
+
+          it 'does not update the game from a yaml file' do
+            
+          end
+
+          it 'does not output a load success message' do
+            
           end
         end
       end

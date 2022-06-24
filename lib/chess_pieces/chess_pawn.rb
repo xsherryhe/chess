@@ -10,7 +10,6 @@ class Pawn < Piece
     @vertical_dir = [1, -1][player_index]
     @double_step = false
     @en_passant = false
-    @promoting = false
     @base_moves = [[0, @vertical_dir]]
   end
 
