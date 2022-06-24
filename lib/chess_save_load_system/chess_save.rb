@@ -44,8 +44,8 @@ module Save
 
   def valid_save_name(max_length)
     loop do
-      name = gets.chomp
-      return if name.downcase == 'go back'
+      name = gets.chomp.downcase
+      return if name == 'go back'
       return name if name =~ Regexp.new("^\\w{1,#{max_length}}$")
 
       puts save_name_error(name, max_length)
@@ -73,7 +73,7 @@ module Save
     loop do
       puts 'Please type the name of an existing save file to overwrite, ' \
            'or type GO BACK to resume your game without saving.'
-      return if (name = gets.chomp).downcase == 'go back'
+      return if (name = gets.chomp.downcase) == 'go back'
 
       save_exists = existing_save?(name)
       return name if save_exists && confirm_overwrite(name)

@@ -56,7 +56,7 @@ module LoadAndDelete
     loop do
       puts 'Type GO BACK to return to the menu.'
       puts "Please type the name of the game you wish to #{action}."
-      return if (name = gets.chomp).downcase == 'go back'
+      return if (name = gets.chomp.downcase) == 'go back'
       return name if existing_save?(name)
 
       puts 'There is no save file with this name. ' \

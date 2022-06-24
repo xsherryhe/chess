@@ -10,7 +10,7 @@ module SaveLoadBaseMethods
   end
 
   def existing_save?(name)
-    File.readlines(save_record).map(&:downcase).include?(name.downcase + "\n")
+    File.readlines(save_record).include?(name + "\n")
   end
 
   def display_saved_games
@@ -23,7 +23,7 @@ module SaveLoadBaseMethods
 
   def update_save_record(name, add)
     record = File.readlines(save_record)
-    record.reject! { |save| name.downcase == save.downcase }
+    record.delete(name + "\n")
     record << name if add
     File.open(save_record, 'w') do |record_file|
       record.each { |save| record_file.puts(save) }

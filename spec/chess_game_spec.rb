@@ -544,17 +544,17 @@ describe Game do
               it 'adds the save name to the save record' do
                 game.player_action
                 save_record = File.read(mock_save_record)
-                expect(save_record).to include(legal_save_name)
+                expect(save_record).to include(legal_save_name.downcase)
               end
 
               it 'creates a yaml file with the serialized game' do
                 game.player_action
-                file_exist = File.exist?("#{mock_save_dir}/#{legal_save_name}.yaml")
+                file_exist = File.exist?("#{mock_save_dir}/#{legal_save_name.downcase}.yaml")
                 expect(file_exist).to be true
               end
 
               it 'outputs a save success message' do
-                expect(game).to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                expect(game).to receive(:puts).with("Game \"#{legal_save_name.downcase}\" successfully saved!")
                 game.player_action
               end
 
@@ -583,7 +583,7 @@ describe Game do
             end
 
             it 'does not output a save success message' do
-              expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+              expect(game).not_to receive(:puts).with("Game \"#{legal_save_name.downcase}\" successfully saved!")
               game.player_action
             end
 
@@ -671,7 +671,7 @@ describe Game do
           context 'when an existing save name is entered' do
             10.times do
               it 'prompts the user to confirm overwrite of the save' do
-                expect(game).to receive(:puts).with("Overwrite the save file named \"#{existing_save_name}\"? Y/N")
+                expect(game).to receive(:puts).with("Overwrite the save file named \"#{existing_save_name.downcase}\"? Y/N")
                 game.player_action
               end
             end
@@ -680,12 +680,12 @@ describe Game do
               10.times do
                 it 'updates the corresponding yaml file with the serialized game' do
                   game.player_action
-                  file = File.read("#{mock_save_dir}/#{existing_save_name}.yaml")
+                  file = File.read("#{mock_save_dir}/#{existing_save_name.downcase}.yaml")
                   expect(file).not_to eq('')
                 end
 
                 it 'outputs a save success message' do
-                  expect(game).to receive(:puts).with("Game \"#{existing_save_name}\" successfully saved!")
+                  expect(game).to receive(:puts).with("Game \"#{existing_save_name.downcase}\" successfully saved!")
                   game.player_action
                 end
 
