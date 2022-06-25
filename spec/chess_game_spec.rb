@@ -336,7 +336,7 @@ describe Game do
     context 'when the word "menu" is entered' do
       let(:mock_save_dir) { "#{__dir__}/mock_saves" }
       let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
-      let(:legal_save_name) { %w[save1 SAVE1 123 test].sample }
+      let(:existing_save_name) { rand(20).to_s + %w[a A].sample }
 
       def clear_save_record
         File.write(mock_save_record, ' ')
@@ -493,6 +493,8 @@ describe Game do
       end
 
       context 'when the word "save" or "4" is entered' do
+        let(:legal_save_name) { %w[save1 SAVE1 123 test].sample }
+
         before do
           allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[save SAVE 4].sample, legal_save_name, %w[y Y yes YES].sample)
           allow(Dir).to receive(:mkdir)
@@ -788,14 +790,32 @@ describe Game do
                     call_count += 1
                     if call_count == 1 then %w[menu MENU].sample
                     elsif call_count == 2 then %w[save SAVE 4].sample
+                    elsif call_count == no_cancel_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
                     elsif call_count == no_cancel_count * 2 + 5 then %w[back BACK 8].sample
                     elsif call_count.odd? then non_existing_save_names.sample
-                    elsif call_count == no_cancel_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
                     else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                     end
                   end
 
                   expect(game).to receive(:puts).with(/Please type the name of an existing save file to overwrite/).exactly(no_cancel_count + 1).times
+                  game.player_action
+                end
+
+                it 'prompts the user to enter an existing save name until an existing save name is entered and confirmed' do
+                  invalid_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[save SAVE 4].sample
+                    elsif call_count == invalid_count * 2 + 3 then existing_save_name
+                    elsif call_count >= invalid_count * 2 + 4 then %w[y Y yes YES].sample
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of an existing save file to overwrite/).exactly(invalid_count + 1).times
                   game.player_action
                 end
               end
@@ -810,7 +830,7 @@ describe Game do
         before do
           clear_save_record
           clear_save_dir
-          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, legal_save_name, '')
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, existing_save_name, '')
         end
 
         after do
@@ -818,7 +838,7 @@ describe Game do
           clear_save_dir
         end
 
-        context 'when there is at least one save file' do
+        context 'when previous save files exist' do
           let(:saved_game_board) do
             Array.new(rand(32)) do
               [King, Queen, Rook, Bishop, Knight, Pawn].sample.new(rand(2), Array.new(2) { rand(8) })
@@ -834,15 +854,18 @@ describe Game do
           end
 
           before do
+            File.open(mock_save_record, 'w') do |record_file|
+              20.times { |i| record_file.puts("#{i}a") }
+            end
+            20.times { |i| File.write("#{mock_save_dir}/#{i}a.yaml", '') }
             saved_game = described_class.new
             saved_game.instance_variable_set(:@board, saved_game_board)
             saved_game.instance_variable_set(:@players, saved_game_players)
+            File.write("#{mock_save_dir}/#{existing_save_name.downcase}.yaml", saved_game.to_yaml)
             allow(Player).to receive(:from_yaml) do |string|
               data = YAML.safe_load(string)
               instance_double(Player, name: data['name'], player_index: data['player_index'])
             end
-            File.open(mock_save_record, 'w') { |file| file.puts(legal_save_name.downcase) }
-            File.write("#{mock_save_dir}/#{legal_save_name.downcase}.yaml", saved_game.to_yaml)
           end
 
           it 'prompts the user to enter the name of an existing save file' do
@@ -872,7 +895,7 @@ describe Game do
               end
 
               it 'outputs a load success message' do
-                expect(game).to receive(:puts).with("Game \"#{legal_save_name.downcase}\" successfully loaded!")
+                expect(game).to receive(:puts).with("Game \"#{existing_save_name.downcase}\" successfully loaded!")
                 game.player_action
               end
             end
@@ -900,7 +923,7 @@ describe Game do
           end
 
           context 'when an invalid input (i.e., non-existing save name) is entered' do
-            let(:non_existing_save_names) { ['save2', 'SAVE2', '1230', 'test1', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
+            let(:non_existing_save_names) { ['save1', 'SAVE1', '123', 'test', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
 
             before do
               allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
@@ -953,12 +976,30 @@ describe Game do
                   expect(game).to receive(:puts).with(/Please type the name of the game you wish to load/).exactly(no_menu_count + 1).times
                   game.player_action
                 end
+
+                it 'prompts the user to enter an existing save name until an existing save name is entered' do
+                  invalid_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[load LOAD 5].sample
+                    elsif call_count == invalid_count * 2 + 3 then existing_save_name
+                    elsif call_count == invalid_count * 2 + 4 then ''
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of the game you wish to load/).exactly(invalid_count + 1).times
+                  game.player_action
+                end
               end
             end
           end
         end
 
-        context 'when there are no save files' do
+        context 'when previous save files do not exist' do
           before do
             allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, %w[back BACK 8].sample)
           end
@@ -978,6 +1019,270 @@ describe Game do
 
           it 'does not output a load success message' do
             expect(game).not_to receive(:puts).with(/successfully loaded/)
+            game.player_action
+          end
+        end
+      end
+
+      context 'when the word "delete" or "6" is entered' do
+        before do
+          clear_save_record
+          clear_save_dir
+          allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
+                                                   %w[delete DELETE 6].sample,
+                                                   existing_save_name,
+                                                   ['n', 'N', 'no', 'NO', 'yesterday', ''].sample,
+                                                   '', %w[back BACK 8].sample)
+        end
+
+        after do
+          clear_save_record
+          clear_save_dir
+        end
+
+        context 'when previous save files exist' do
+          before do
+            File.open(mock_save_record, 'w') do |record_file|
+              20.times { |i| record_file.puts("#{i}a") }
+            end
+            20.times { |i| File.write("#{mock_save_dir}/#{i}a.yaml", '') }
+          end
+
+          it 'prompts the user to enter the name of an existing save file' do
+            expect(game).to receive(:puts).with(/Please type the name of the game you wish to delete/)
+            game.player_action
+          end
+
+          context 'when an existing save name is entered' do
+            10.times do
+              it 'deletes the corresponding file' do
+                game.player_action
+                saved_files = Dir.glob("#{mock_save_dir}/*.yaml")
+                expect(saved_files).not_to include("#{mock_save_dir}/#{existing_save_name.downcase}.yaml")
+              end
+
+              it 'deletes the save name from the save record' do
+                game.player_action
+                saved_names = File.readlines(mock_save_record)
+                expect(saved_names).not_to include(existing_save_name.downcase + "\n")
+              end
+
+              it 'outputs a load success message' do
+                expect(game).to receive(:puts).with("Game \"#{existing_save_name.downcase}\" successfully deleted!")
+                game.player_action
+              end
+            end
+
+            context 'when additional save files exist' do
+              it 'prompts the user to delete another game' do
+                expect(game).to receive(:puts).with('Would you like to delete another game? Y/N')
+                game.player_action
+              end
+
+              context 'when deleting additional save files is not confirmed' do
+                10.times do
+                  it 'outputs a return to menu message' do
+                    expect(game).to receive(:puts).with('Press ENTER to return to the menu.')
+                    game.player_action
+                  end
+                end
+              end
+
+              context 'while deleting additional save files is confirmed' do
+                let(:extra_delete_count) { rand(20) }
+                let(:all_existing_save_names) do
+                  (0...20).to_a.product(%w[A a]).map(&:join)
+                end
+                let(:deleted_save_names) { [] }
+
+                before do
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[delete DELETE 6].sample
+                    elsif call_count == extra_delete_count * 2 + 4 then ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    elsif call_count == extra_delete_count * 2 + 5 then ''
+                    elsif call_count == extra_delete_count * 2 + 6 then %w[back BACK 8].sample
+                    elsif call_count.odd?
+                      save_name = all_existing_save_names.sample
+                      all_existing_save_names.reject! { |name| name.downcase == save_name.downcase }
+                      deleted_save_names << save_name
+                      save_name
+                    else %w[y Y yes YES].sample
+                    end
+                  end
+                end
+
+                10.times do
+                  it 'prompts the user to enter the name of additional existing save files until deleting additional save files is no longer confirmed' do
+                    expect(game).to receive(:puts).with(/Please type the name of the game you wish to delete/).exactly(extra_delete_count + 1).times
+                    game.player_action
+                  end
+
+                  it 'deletes all corresponding save files' do
+                    game.player_action
+                    saved_files = Dir.glob("#{mock_save_dir}/*.yaml")
+                    deleted_files = deleted_save_names.map { |name| "#{mock_save_dir}/#{name.downcase}.yaml" }
+                    expect(saved_files).not_to include(*deleted_files)
+                  end
+
+                  it 'deletes all corresponding save names from the save record' do
+                    game.player_action
+                    saved_names = File.readlines(mock_save_record)
+                    deleted_names = deleted_save_names.map { |name| name.downcase + "\n" }
+                    expect(saved_names).not_to include(*deleted_names)
+                  end
+
+                  it 'outputs a load success message for each deleted save file' do
+                    expect(game).to receive(:puts).with(/successfully deleted/).exactly(extra_delete_count + 1).times
+                    game.player_action
+                  end
+                end
+              end
+            end
+
+            context 'when no additional save files exist' do
+              before do
+                File.open(mock_save_record, 'w') { |record_file| record_file.puts(existing_save_name.downcase) }
+                clear_save_dir
+                File.write("#{mock_save_dir}/#{existing_save_name.downcase}.yaml", '')
+              end
+
+              it 'does not prompt the user to delete another game' do
+                expect(game).not_to receive(:puts).with('Would you like to delete another game? Y/N')
+                game.player_action
+              end
+            end
+          end
+
+          context 'when the words "go back" are entered' do
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[delete DELETE 6].sample, ['go back', 'GO BACK'].sample, %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'does not delete any save files' do
+                game.player_action
+                saved_file_num = Dir.glob("#{mock_save_dir}/*.yaml").select { |file| File.file?(file) }.size
+                expect(saved_file_num).to eq(20)
+              end
+
+              it 'does not delete any save names from the save record' do
+                game.player_action
+                saved_name_num = File.readlines(mock_save_record).size
+                expect(saved_name_num).to eq(20)
+              end
+
+              it 'does not output a load success message' do
+                expect(game).not_to receive(:puts).with(/successfully deleted/)
+                game.player_action
+              end
+            end
+          end
+
+          context 'when an invalid input (i.e., non-existing save name) is entered' do
+            let(:non_existing_save_names) { ['save1', 'SAVE1', '123', 'test', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
+
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
+                                                       %w[delete DELETE 6].sample,
+                                                       non_existing_save_names.sample,
+                                                       ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample,
+                                                       %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'prompts the user to return to the menu' do
+                expect(game).to receive(:puts).with('There is no save file with this name. Return to the menu? Y/N')
+                game.player_action
+              end
+            end
+
+            context 'when returning to the menu is confirmed' do
+              10.times do
+                it 'does not delete any save files' do
+                  game.player_action
+                  saved_file_num = Dir.glob("#{mock_save_dir}/*.yaml").select { |file| File.file?(file) }.size
+                  expect(saved_file_num).to eq(20)
+                end
+
+                it 'does not delete any save names from the save record' do
+                  game.player_action
+                  saved_name_num = File.readlines(mock_save_record).size
+                  expect(saved_name_num).to eq(20)
+                end
+
+                it 'does not output a load success message' do
+                  expect(game).not_to receive(:puts).with(/successfully deleted/)
+                  game.player_action
+                end
+              end
+            end
+
+            context 'while returning to the menu is not confirmed' do
+              10.times do
+                it 'prompts the user to enter an existing save name until returning to the menu is confirmed' do
+                  no_menu_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[delete DELETE 6].sample
+                    elsif call_count == no_menu_count * 2 + 5 then %w[back BACK 8].sample
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    elsif call_count == no_menu_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of the game you wish to delete/).exactly(no_menu_count + 1).times
+                  game.player_action
+                end
+
+                it 'prompts the user to enter an existing save name until an existing save name is entered' do
+                  invalid_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[delete DELETE 6].sample
+                    elsif call_count == invalid_count * 2 + 3 then existing_save_name
+                    elsif call_count == invalid_count * 2 + 4 then ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    elsif call_count == invalid_count * 2 + 5 then ''
+                    elsif call_count == invalid_count * 2 + 6 then %w[back BACK 8].sample
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of the game you wish to delete/).exactly(invalid_count + 1).times
+                  game.player_action
+                end
+              end
+            end
+          end
+        end
+
+        context 'when previous save files do not exist' do
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[delete DELETE 6].sample, %w[back BACK 8].sample)
+          end
+
+          it 'does not change the save directory' do
+            game.player_action
+            saved_file_num = Dir.glob("#{mock_save_dir}/*.yaml").select { |file| File.file?(file) }.size
+            expect(saved_file_num).to eq(0)
+          end
+
+          it 'does not change the save record' do
+            game.player_action
+            save_record = File.read(mock_save_record)
+            expect(save_record).to eq(' ')
+          end
+
+          it 'does not output a load success message' do
+            expect(game).not_to receive(:puts).with(/successfully deleted/)
             game.player_action
           end
         end
