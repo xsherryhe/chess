@@ -60,7 +60,7 @@ module LoadAndDelete
       return name if existing_save?(name)
 
       puts 'There is no save file with this name. ' \
-           'Return to main menu? Y/N'
+           'Return to the menu? Y/N'
       return if gets.chomp =~ /^yes$|^y$|^go back$/i
     end
   end

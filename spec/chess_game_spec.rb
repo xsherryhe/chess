@@ -583,7 +583,7 @@ describe Game do
             end
 
             it 'does not output a save success message' do
-              expect(game).not_to receive(:puts).with("Game \"#{legal_save_name.downcase}\" successfully saved!")
+              expect(game).not_to receive(:puts).with(/successfully saved/)
               game.player_action
             end
 
@@ -730,7 +730,7 @@ describe Game do
               end
 
               it 'does not output a save success message' do
-                expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                expect(game).not_to receive(:puts).with(/successfully saved/)
                 game.player_action
               end
 
@@ -768,7 +768,7 @@ describe Game do
                 end
 
                 it 'does not output a save success message' do
-                  expect(game).not_to receive(:puts).with("Game \"#{legal_save_name}\" successfully saved!")
+                  expect(game).not_to receive(:puts).with(/successfully saved/)
                   game.player_action
                 end
 
@@ -781,7 +781,7 @@ describe Game do
 
             context 'while cancellation of the save overwrite is not confirmed' do
               10.times do
-                it 'prompts the user to enter an existing save name cancellation of the save overwrite is confirmed' do
+                it 'prompts the user to enter an existing save name until cancellation of the save overwrite is confirmed' do
                   no_cancel_count = rand(100)
                   call_count = 0
                   allow(game).to receive(:gets) do
@@ -805,6 +805,8 @@ describe Game do
       end
 
       context 'when the word "load" or "5" is entered' do
+        let(:players) { game.instance_variable_get(:@players) }
+
         before do
           clear_save_record
           clear_save_dir
@@ -861,7 +863,7 @@ describe Game do
                   saved_vals = instance_vals(saved_game_board[i])
                   expect(vals).to eq(saved_vals)
                 end
-                game.instance_variable_get(:@players).each_with_index do |player, i|
+                players.each_with_index do |player, i|
                   saved_player = saved_game_players[i]
                   vals = [player.name, player.player_index]
                   saved_vals = [saved_player.name, saved_player.player_index]
@@ -870,31 +872,113 @@ describe Game do
               end
 
               it 'outputs a load success message' do
-                expect(game).to receive(:puts).with("Game \"#{legal_save_name}\" successfully loaded!")
+                expect(game).to receive(:puts).with("Game \"#{legal_save_name.downcase}\" successfully loaded!")
                 game.player_action
               end
             end
           end
 
           context 'when the words "go back" are entered' do
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, ['go back', 'GO BACK'].sample, %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'does not update the game with data from the corresponding file' do
+                starting_board = game.instance_variable_get(:@board)
+                starting_players = game.instance_variable_get(:@players)
+                game.player_action
+                expect(board).to eq(starting_board)
+                expect(players).to eq(starting_players)
+              end
+
+              it 'does not output a load success message' do
+                expect(game).not_to receive(:puts).with(/successfully loaded/)
+                game.player_action
+              end
+            end
           end
 
           context 'when an invalid input (i.e., non-existing save name) is entered' do
+            let(:non_existing_save_names) { ['save2', 'SAVE2', '1230', 'test1', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
 
+            before do
+              allow(game).to receive(:gets).and_return(%w[menu MENU].sample,
+                                                       %w[load LOAD 5].sample,
+                                                       non_existing_save_names.sample,
+                                                       ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample,
+                                                       %w[back BACK 8].sample)
+            end
+
+            10.times do
+              it 'prompts the user to return to the menu' do
+                expect(game).to receive(:puts).with('There is no save file with this name. Return to the menu? Y/N')
+                game.player_action
+              end
+            end
+
+            context 'when returning to the menu is confirmed' do
+              10.times do
+                it 'does not update the game with data from the corresponding file' do
+                  starting_board = game.instance_variable_get(:@board)
+                  starting_players = game.instance_variable_get(:@players)
+                  game.player_action
+                  expect(board).to eq(starting_board)
+                  expect(players).to eq(starting_players)
+                end
+
+                it 'does not output a load success message' do
+                  expect(game).not_to receive(:puts).with(/successfully loaded/)
+                  game.player_action
+                end
+              end
+            end
+
+            context 'while returning to the menu is not confirmed' do
+              10.times do
+                it 'prompts the user to enter an existing save name until returning to the menu is confirmed' do
+                  no_menu_count = rand(100)
+                  call_count = 0
+                  allow(game).to receive(:gets) do
+                    call_count += 1
+                    if call_count == 1 then %w[menu MENU].sample
+                    elsif call_count == 2 then %w[load LOAD 5].sample
+                    elsif call_count == no_menu_count * 2 + 5 then %w[back BACK 8].sample
+                    elsif call_count.odd? then non_existing_save_names.sample
+                    elsif call_count == no_menu_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
+                    else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
+                    end
+                  end
+
+                  expect(game).to receive(:puts).with(/Please type the name of the game you wish to load/).exactly(no_menu_count + 1).times
+                  game.player_action
+                end
+              end
+            end
           end
         end
 
         context 'when there are no save files' do
-          it 'outputs a no save files message' do
-            
+          before do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[load LOAD 5].sample, %w[back BACK 8].sample)
           end
 
-          it 'does not update the game from a yaml file' do
-            
+          it 'outputs a no save files message' do
+            expect(game).to receive(:puts).with('You have no saved games.')
+            game.player_action
+          end
+
+          it 'does not update the game with data from the corresponding file' do
+            starting_board = game.instance_variable_get(:@board)
+            starting_players = game.instance_variable_get(:@players)
+            game.player_action
+            expect(board).to eq(starting_board)
+            expect(players).to eq(starting_players)
           end
 
           it 'does not output a load success message' do
-            
+            expect(game).not_to receive(:puts).with(/successfully loaded/)
+            game.player_action
           end
         end
       end
