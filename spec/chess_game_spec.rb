@@ -1266,7 +1266,6 @@ describe Game do
                     if call_count == 1 then %w[menu MENU].sample
                     elsif call_count == 2 then %w[delete DELETE 6].sample
                     elsif call_count == invalid_count * 2 + 3 then existing_save_name
-                    elsif call_count == invalid_count * 2 + 4 then ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                     elsif call_count == invalid_count * 2 + 5 then ''
                     elsif call_count == invalid_count * 2 + 6 then %w[back BACK 8].sample
                     elsif call_count.odd? then non_existing_save_names.sample
