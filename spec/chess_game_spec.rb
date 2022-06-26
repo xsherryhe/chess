@@ -3,17 +3,32 @@ describe Game do
   subject(:game) { described_class.new }
   let(:white_player) { instance_double(Player, name: 'Foo', player_index: 0, color: 'White') }
   let(:black_player) { instance_double(Player, name: 'Bar', player_index: 1, color: 'Black') }
+  let(:players) { game.instance_variable_get(:@players) }
   let(:board) { game.instance_variable_get(:@board) }
+  let(:mock_save_dir) { "#{__dir__}/mock_saves" }
+  let(:mock_save_record) { "#{__dir__}/mock_saves/mock_save_record.txt" }
+  let(:existing_save_name) { rand(20).to_s + %w[a A].sample }
+
+  def clear_save_record
+    File.write(mock_save_record, ' ')
+  end
+
+  def clear_save_dir
+    Dir.foreach(mock_save_dir) do |file|
+      unless %w[. .. mock_save_record.txt].include?(file)
+        File.delete("#{mock_save_dir}/#{file}")
+      end
+    end
+  end
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
+    allow(game).to receive(:puts)
+    allow(game).to receive(:save_dir).and_return(mock_save_dir)
+    allow(game).to receive(:save_record).and_return(mock_save_record)
   end
 
   describe '#initialize' do
-    before do
-      allow(game).to receive(:puts)
-    end
-
     it 'sets up starting board with correct number of pieces for each side' do
       side_count = board.partition { |piece| piece.player_index.zero? }.map(&:size)
       expect(side_count).to eq([16, 16])
@@ -79,16 +94,18 @@ describe Game do
     let(:checked_player) { [white_player, black_player][checked_player_index] }
     let(:checking_player) { [white_player, black_player][checked_player_index ^ 1] }
     let(:king_to_check) { instance_double(King, player_index: checked_player_index, position: Array.new(2) { rand(8) }) }
+    let(:checked_board) do
+      new_board = board.reject { |piece| piece.is_a?(King) && piece.player_index == checked_player_index }
+      new_board << king_to_check
+    end
     let(:check_message_reg) { Regexp.new("#{checking_player.color} gives check to #{checked_player.color}.") }
 
     before do
-      allow(King).to receive(:new).with(checked_player_index, anything).and_return(king_to_check)
       allow(king_to_check).to receive(:is_a?).with(King).and_return(true)
       allow(king_to_check).to receive(:to_yaml).and_return('')
-      allow(King).to receive(:new).with(checked_player_index ^ 1, anything).and_call_original
-      allow(game).to receive(:puts)
-      allow(game).to receive(:gets).and_return('')
       game.instance_variable_set(:@curr_player_index, checked_player_index)
+      game.instance_variable_set(:@board, checked_board)
+      allow(game).to receive(:gets).and_return('')
     end
 
     context 'when a player checks their opponent' do
@@ -118,7 +135,6 @@ describe Game do
     end
 
     before do
-      allow(game).to receive(:puts)
       game.instance_variable_set(:@history, [game_history_position] * rand(5))
       game.instance_variable_set(:@idle_moves, rand(200))
       allow(game).to receive(:gets).and_return(%w[YES yes Y y].sample)
@@ -240,18 +256,20 @@ describe Game do
     let(:mated_player) { [white_player, black_player][mated_player_index] }
     let(:mating_player) { [white_player, black_player][mated_player_index ^ 1] }
     let(:king_to_mate) { instance_double(King, player_index: mated_player_index, position: Array.new(2) { rand(8) }) }
-
-    before do
-      allow(King).to receive(:new).with(mated_player_index, anything).and_return(king_to_mate)
-      allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
-      allow(king_to_mate).to receive(:to_yaml).and_return('')
-      allow(King).to receive(:new).with(mated_player_index ^ 1, anything).and_call_original
-      allow(game).to receive(:puts)
-      allow(game).to receive(:display_board)
-      game.instance_variable_set(:@curr_player_index, mated_player_index)
-      game.instance_variable_get(:@board).each do |piece|
+    let(:mated_board) do
+      new_board = board.reject { |piece| piece.is_a?(King) && piece.player_index == mated_player_index }
+      new_board << king_to_mate
+      new_board.each do |piece|
         allow(piece).to receive(:legal_next_positions).and_return([])
       end
+    end
+
+    before do
+      allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
+      allow(king_to_mate).to receive(:to_yaml).and_return('')
+      allow(game).to receive(:display_board)
+      game.instance_variable_set(:@curr_player_index, mated_player_index)
+      game.instance_variable_set(:@board, mated_board)
     end
 
     context 'when a player checkmates their opponent' do
@@ -296,15 +314,9 @@ describe Game do
 
     context 'when the opponent still has legal moves' do
       before do
-        allow(King).to receive(:new).with(mated_player_index, anything).and_return(king_to_mate)
-        allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
         allow(king_to_mate).to receive(:checked?).and_return([true, false].sample)
-        allow(King).to receive(:new).with(mated_player_index ^ 1, anything).and_call_original
-        allow(game).to receive(:puts)
-        allow(game).to receive(:display_board)
-        game.instance_variable_set(:@curr_player_index, mated_player_index)
         game.instance_variable_get(:@board).each do |piece|
-          allow(piece).to receive(:legal_next_positions).and_return([ Array.new(2) { rand(8) }])
+          allow(piece).to receive(:legal_next_positions).and_return([Array.new(2) { rand(8) }])
         end
       end
 
@@ -330,7 +342,15 @@ describe Game do
 
     before do
       game.instance_variable_set(:@curr_player_index, curr_player_index)
-      allow(game).to receive(:puts)
+      allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 8].sample)
+    end
+
+    10.times do
+      it 'prompts the player for an input to determine their next action' do
+        prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
+        expect(game).to receive(:puts).with(prompt_reg)
+        game.player_action
+      end
     end
 
     context 'when the word "menu" is entered' do
@@ -353,41 +373,41 @@ describe Game do
       before do
         allow(game).to receive(:save_dir).and_return(mock_save_dir)
         allow(game).to receive(:save_record).and_return(mock_save_record)
-        allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 8].sample)
       end
 
       10.times do
-        it 'prompts the player for an input to determine their next action' do
-          prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
-          expect(game).to receive(:puts).with(prompt_reg)
-          game.player_action
-        end
-
-        it 'outputs a list of game menu options' do
-          expect(game).to receive(:puts).with(/Enter one of the following commands:/)
+        it 'outputs a list of game menu options until the menu is closed' do
+          loop_count = rand(1..100)
+          call_count = 0
+          allow(game).to receive(:select_menu_option) do
+            call_count += 1
+            if call_count == loop_count
+              game.instance_variable_set(:@menu_done, true)
+            end
+          end
+          expect(game).to receive(:puts).with(/Enter one of the following commands:/).exactly(loop_count).times
           game.player_action
         end
       end
 
       context 'when the word "back" or "8" is entered' do
         10.times do
-          it 'exits from the method' do; end
+          it 'exits the method' do
+            game.player_action
+          end
         end
       end
 
       context 'while the word "help" or "1" is entered' do
         10.times do
           it 'outputs chess instructions the corresponding number of times' do
-            help_count = rand(1..100)
+            help_count = rand(100)
             call_count = 0
             allow(game).to receive(:gets) do
               call_count += 1
-              if call_count == 1
-                %w[menu MENU].sample
-              elsif call_count == (help_count * 2) + 2
-                'back'
-              elsif call_count.even?
-                %w[help HELP 1].sample
+              if call_count == 1 then %w[menu MENU].sample
+              elsif call_count == (help_count * 2) + 2 then %w[back BACK 8].sample
+              elsif call_count.even? then %w[help HELP 1].sample
               else ''
               end
             end
@@ -825,8 +845,6 @@ describe Game do
       end
 
       context 'when the word "load" or "5" is entered' do
-        let(:players) { game.instance_variable_get(:@players) }
-
         before do
           clear_save_record
           clear_save_dir
@@ -877,7 +895,7 @@ describe Game do
             10.times do
               it 'updates the game with data from the corresponding file' do
                 def instance_vals(piece)
-                  piece.instance_variables.map { |var| game.instance_variable_get(var) }
+                  piece.instance_variables.map { |var| piece.instance_variable_get(var) }
                 end
 
                 game.player_action
@@ -966,9 +984,9 @@ describe Game do
                     call_count += 1
                     if call_count == 1 then %w[menu MENU].sample
                     elsif call_count == 2 then %w[load LOAD 5].sample
+                    elsif call_count == no_menu_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
                     elsif call_count == no_menu_count * 2 + 5 then %w[back BACK 8].sample
                     elsif call_count.odd? then non_existing_save_names.sample
-                    elsif call_count == no_menu_count * 2 + 4 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
                     else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                     end
                   end
@@ -1288,6 +1306,17 @@ describe Game do
         end
       end
 
+      context 'when the word "main" or "7" is entered' do
+        10.times do
+          it 'ends the current game' do
+            allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[main MAIN 7].sample)
+            game.player_action
+            game_over = game.instance_variable_get(:@game_over)
+            expect(game_over).to be true
+          end
+        end
+      end
+
       context 'while an invalid input is entered' do
         10.times do
           it 'prompts the user to enter an input until a valid input is entered' do
@@ -1550,6 +1579,86 @@ describe Game do
           game.player_action
         end
       end
+    end
+  end
+
+  describe '#update_from_yaml' do
+    10.times do
+      it 'updates the game with data from the given file' do
+        clear_save_record
+        clear_save_dir
+        File.open(mock_save_record, 'w') do |record_file|
+          20.times { |i| record_file.puts("#{i}a") }
+        end
+        20.times { |i| File.write("#{mock_save_dir}/#{i}a.yaml", '') }
+
+        saved_game = described_class.new
+
+        saved_game_players = [instance_double(Player, name: rand(100).to_s, player_index: 0),
+                              instance_double(Player, name: rand(100).to_s, player_index: 1)]
+        saved_game_players.each do |player|
+          allow(player).to receive(:to_yaml).and_return(YAML.dump('player_index' => player.player_index, 'name' => player.name))
+        end
+        allow(Player).to receive(:from_yaml) do |string|
+          data = YAML.safe_load(string)
+          instance_double(Player, name: data['name'], player_index: data['player_index'])
+        end
+        saved_game.instance_variable_set(:@players, saved_game_players)
+
+        saved_game_board = Array.new(rand(32)) do
+          [King, Queen, Rook, Bishop, Knight, Pawn].sample.new(rand(2), Array.new(2) { rand(8) })
+        end
+        saved_game.instance_variable_set(:@board, saved_game_board)
+
+        saved_file_name = "#{mock_save_dir}/#{existing_save_name.downcase}.yaml"
+        File.write(saved_file_name, saved_game.to_yaml)
+
+        def instance_vals(piece)
+          piece.instance_variables.map { |var| piece.instance_variable_get(var) }
+        end
+
+        game.update_from_yaml(saved_file_name)
+
+        board.each_with_index do |piece, i|
+          vals = instance_vals(piece)
+          saved_vals = instance_vals(saved_game_board[i])
+          expect(vals).to eq(saved_vals)
+        end
+        players.each_with_index do |player, i|
+          saved_player = saved_game_players[i]
+          vals = [player.name, player.player_index]
+          saved_vals = [saved_player.name, saved_player.player_index]
+          expect(vals).to eq(saved_vals)
+        end
+
+        clear_save_record
+        clear_save_dir
+      end
+    end
+  end
+
+  describe '::from_yaml' do
+    let(:saved_file_name) { "#{mock_save_dir}/#{existing_save_name.downcase}.yaml" }
+    let(:game) { instance_double(Game) }
+
+    before do
+      allow(Game).to receive(:new).and_return(game)
+      allow(game).to receive(:update_from_yaml)
+    end
+
+    after do
+      clear_save_record
+      clear_save_dir
+    end
+
+    it 'creates a new game with a custom setup' do
+      expect(Game).to receive(:new).with(true)
+      Game.from_yaml(saved_file_name)
+    end
+
+    it 'sends an #update_from_yaml message with the given file to the game' do
+      expect(game).to receive(:update_from_yaml).with(saved_file_name)
+      Game.from_yaml(saved_file_name)
     end
   end
 end

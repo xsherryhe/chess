@@ -7,16 +7,11 @@ module Chess
   extend LoadAndDelete
 
   def self.run
-    loop do
+    until @menu_done
       puts menu_options
-      case gets.chomp
-      when /^1$|^new$/i then Game.new.play
-      when /^2$|^load$/i then load_game
-      when /^3$|^delete$/i then delete_game
-      when /^4$|^help$/i then display_information
-      when /^5$|^exit$/i then return
-      end
+      select_menu_option
     end
+    @menu_done = false
   end
 
   def self.menu_options
@@ -28,6 +23,17 @@ module Chess
        'HELP (View instructions.)',
        'EXIT (Exit the program.)']
       .map.with_index(1) { |option, i| "  #{i}. #{option}" }.join("\r\n")
+  end
+
+  def self.select_menu_option
+    case gets.chomp
+    when /^1$|^new$/i then Game.new.play
+    when /^2$|^load$/i then load_game
+    when /^3$|^delete$/i then delete_game
+    when /^4$|^help$/i then display_information
+    when /^5$|^exit$/i then @menu_done = true
+    else puts 'Invalid input!'
+    end
   end
 
   def self.display_information
