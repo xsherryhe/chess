@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+
+require 'yaml'
 Dir[__dir__ + '/*.rb'].sort.each do |file|
   require file unless file.include?('piece')
 end

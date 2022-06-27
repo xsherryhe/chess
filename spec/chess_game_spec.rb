@@ -1638,10 +1638,10 @@ describe Game do
 
   describe '::from_yaml' do
     let(:saved_file_name) { "#{mock_save_dir}/#{existing_save_name.downcase}.yaml" }
-    let(:game) { instance_double(Game) }
+    let(:game) { instance_double(described_class) }
 
     before do
-      allow(Game).to receive(:new).and_return(game)
+      allow(described_class).to receive(:new).and_return(game)
       allow(game).to receive(:update_from_yaml)
     end
 
@@ -1651,13 +1651,13 @@ describe Game do
     end
 
     it 'creates a new game with a custom setup' do
-      expect(Game).to receive(:new).with(true)
-      Game.from_yaml(saved_file_name)
+      expect(described_class).to receive(:new).with(true)
+      described_class.from_yaml(saved_file_name)
     end
 
     it 'sends an #update_from_yaml message with the given file to the game' do
       expect(game).to receive(:update_from_yaml).with(saved_file_name)
-      Game.from_yaml(saved_file_name)
+      described_class.from_yaml(saved_file_name)
     end
   end
 end

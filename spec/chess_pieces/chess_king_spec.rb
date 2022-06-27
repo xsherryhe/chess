@@ -1,5 +1,6 @@
 require_relative '../../lib/chess_pieces/chess_king.rb'
 require_relative '../../lib/chess_pieces/chess_rook.rb'
+require_relative '../../lib/chess_pieces/chess_pawn.rb'
 
 describe King do
   let(:player_index) { rand(2) }
