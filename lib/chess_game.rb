@@ -56,7 +56,8 @@ class Game
   end
 
   def valid_input(pieces)
-    puts select_piece_instruction + game_menu_instruction
+    puts select_piece_instruction
+    puts game_menu_instruction
 
     loop do
       input = gets.chomp
