@@ -12,7 +12,7 @@ module GameMenu
   private
 
   def game_menu_instruction
-    ' (Or enter the word MENU to view other game options.)'
+    '(Or enter the word MENU to view other game options.)'
   end
 
   def game_menu
