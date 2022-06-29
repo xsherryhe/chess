@@ -10,25 +10,22 @@ describe Piece do
     Array.new(2) { rand(8) }
   end
   subject(:piece) { described_class.new(player_index, random_position) }
-  let(:random_move_num) { rand(50) }
   let(:legal_position) do
     loop do
       position = Array.new(2) { rand(8) }
       return position unless position == random_position
     end
   end
-  let(:legal_position_input) do
-    ('a'..'h').to_a[legal_position.first] + (legal_position.last + 1).to_s
-  end
-
-  before do
-    allow(piece).to receive(:puts)
-    piece.instance_variable_set(:@name, 'piece')
-    allow(piece).to receive(:legal_next_positions).and_return([legal_position])
-    piece.instance_variable_set(:@illegal_check_next_positions, [])
-  end
 
   describe '#move' do
+    10.times do
+      it "sets the piece's position to the given position" do
+        piece.move(legal_position)
+        expect(piece.position).to eq(legal_position)
+      end
+    end
+=begin
+    # move to game class
     context 'while an invalid input is entered' do
       10.times do
         it 'prompts the user to enter an input until a valid input is entered' do
@@ -47,6 +44,7 @@ describe Piece do
         end
       end
     end
+=end
   end
 
   describe '::from_yaml' do
