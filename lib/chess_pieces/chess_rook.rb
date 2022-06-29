@@ -1,8 +1,6 @@
 require_relative './chess_piece.rb'
-require_relative './chess_castle.rb'
 
 class Rook < Piece
-  include Castle
   attr_reader :moved
 
   def initialize(player_index, starting_position)
@@ -16,9 +14,8 @@ class Rook < Piece
     @moved = false
   end
 
-  def move(board, move_num)
-    king = king_to_castle(board, move_num)
-    king ? move_with_castle(king, board, move_num) : super
+  def move(goal_pos)
+    super
     @moved = true
   end
 
@@ -28,17 +25,5 @@ class Rook < Piece
     super.merge('data' => { 'moved' => @moved }) do |_, sup_d, new_d|
       sup_d.merge(new_d)
     end
-  end
-
-  def king_to_castle(board, move_num)
-    king = player_king(board)
-    king if king.can_castle?(self, board, move_num)
-  end
-
-  def move_with_castle(king, board, move_num)
-    input = valid_castle_input(board, move_num)
-    return @position = to_pos(input) unless input =~ /^castle$/i
-
-    king.castle(self)
   end
 end

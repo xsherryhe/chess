@@ -13,11 +13,10 @@ class Pawn < Piece
     @base_moves = [[0, @vertical_dir]]
   end
 
-  def move(board, move_num)
-    new_pos = valid_pos_input(board, move_num)
-    @double_step = move_num if new_pos == double_step_pos
-    @promoting = true if new_pos.last == 7 * (player_index ^ 1)
-    @position = new_pos
+  def move(goal_pos, move_num)
+    @double_step = move_num if goal_pos == double_step_pos
+    @promoting = true if goal_pos.last == 7 * (player_index ^ 1)
+    super
   end
 
   def next_positions(board, move_num)

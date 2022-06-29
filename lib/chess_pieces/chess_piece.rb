@@ -10,15 +10,15 @@ class Piece
   include BaseMethods
 
   attr_accessor :position
-  attr_reader :player_index, :symbol
+  attr_reader :player_index, :symbol, :illegal_check_next_positions
 
   def initialize(player_index, starting_position)
     @player_index = player_index
     @position = starting_position
   end
 
-  def move(board, move_num)
-    @position = valid_pos_input(board, move_num)
+  def move(goal_pos, *)
+    @position = goal_pos
   end
 
   def legal_next_positions(board, move_num)
@@ -71,32 +71,6 @@ class Piece
     capture_piece(index_to_capture(moved_piece, moved_board), moved_board)
     king.checked?((moved_piece.is_a?(King) ? moved_piece : king).position,
                   moved_board, move_num)
-  end
-
-  def move_instruction(move_num)
-    "Please enter the square to move the #{@name}" +
-      (move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
-  end
-
-  def error_message(new_pos)
-    message = "Please enter a square for the #{@name} " \
-    'that can be reached with a legal move. ' \
-    'Please use the format LETTER + NUMBER (e.g., "A1").'
-    if @illegal_check_next_positions.include?(new_pos)
-      message = "This move would leave your king in check.\r\n" +
-                message
-    end
-    (new_pos ? 'Illegal move! ' : 'Invalid input! ') + message
-  end
-
-  def valid_pos_input(board, move_num)
-    puts move_instruction(move_num)
-    new_pos = to_pos(gets.chomp)
-    until legal_next_positions(board, move_num).include?(new_pos)
-      puts error_message(new_pos)
-      new_pos = to_pos(gets.chomp)
-    end
-    new_pos
   end
 
   def base_positions
