@@ -9,20 +9,24 @@ describe King do
   end
   subject(:king) { described_class.new(player_index, random_position) }
   let(:random_move_num) { rand(50) }
-
-  describe '#move' do
-    let(:legal_position) do
-      loop do
-        position = [random_position.first + [1, 0, -1].sample,
-                    random_position.last + [1, 0, -1].sample]
-        if position != random_position && position.all? { |dir| dir.between?(0, 7) }
-          return position
-        end
+  let(:legal_position) do
+    loop do
+      position = [random_position.first + [1, 0, -1].sample,
+                  random_position.last + [1, 0, -1].sample]
+      if position != random_position && position.all? { |dir| dir.between?(0, 7) }
+        return position
       end
     end
-    let(:legal_position_input) do
-      ('a'..'h').to_a[legal_position.first] + (legal_position.last + 1).to_s
+  end
+
+  describe '#move' do
+    it 'sets the moved variable to true' do
+      king.move(legal_position)
+      expect(king.moved).to be true
     end
+  end
+
+  describe '#legal_next_positions' do
     let(:illegal_position) do
       position = Array.new(2) { rand(8) }
       while (position.first - random_position.first).abs <= 1 &&
@@ -31,48 +35,35 @@ describe King do
       end
       position
     end
-    let(:illegal_position_input) do
-      ('a'..'h').to_a[illegal_position.first] + (illegal_position.last + 1).to_s
-    end
-    let(:illegal_position_message) { 'Illegal move! Please enter a square for the king that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").' }
-    let(:board) { [king] }
+    let(:legal_positions) { king.legal_next_positions([king], random_move_num) }
 
     before do
-      allow(king).to receive(:puts)
-      allow(king).to receive(:gets).and_return(legal_position_input)
-      allow(king).to receive(:can_castle?).and_return(false)
+      allow(king).to receive(:checked?).and_return(false)
     end
 
     10.times do
-      it 'prompts the user to enter a position' do
-        expect(king).to receive(:puts).with(/Please enter the square to move the king/)
-        king.move(board, random_move_num)
+      it 'includes legal positions' do
+        expect(legal_positions).to include(legal_position)
+      end
+
+      it 'excludes illegal positions' do
+        expect(legal_positions).not_to include(illegal_position)
       end
     end
 
-    context 'when a legal position is entered' do
+    context 'when a position would place the king in check' do
+      before do
+        allow(king).to receive(:checked?).with(legal_position, any_args).and_return(true)
+      end
+
       10.times do
-        it "changes the king's position to the new position" do
-          king.move(board, random_move_num)
-          expect(king.position).to eq(legal_position)
+        it 'excludes the position' do
+          expect(legal_positions).not_to include(legal_position)
         end
-      end
-    end
 
-    context 'while an illegal position is entered' do
-      10.times do
-        it 'prompts the user to enter a position until a legal position is entered' do
-          illegal_inputs = rand(100)
-          call_count = 0
-          allow(king).to receive(:gets) do
-            call_count += 1
-            call_count == illegal_inputs + 1 ? legal_position_input : illegal_position_input
-          end
-          expect(king)
-            .to receive(:puts)
-            .with(illegal_position_message)
-            .exactly(illegal_inputs).times
-          king.move(board, random_move_num)
+        it 'includes the position in the illegal_check_next_positions variable' do
+          legal_positions
+          expect(king.illegal_check_next_positions).to include(legal_position)
         end
       end
     end
@@ -89,41 +80,32 @@ describe King do
           end
         end
       end
-
-      let(:blocking_position_input) do
-        ('a'..'h').to_a[blocking_position.first] + (blocking_position.last + 1).to_s
-      end
-
       let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
       let(:board) { [king, blocking_piece] }
-
-      before do
-        allow(blocking_piece).to receive(:is_a?).and_return([true, false].sample)
-        allow(king).to receive(:checked?).and_return(false)
-      end
+      let(:legal_positions) { king.legal_next_positions(board, random_move_num) }
 
       context "when the piece is the opponent's" do
         10.times do
-          it "allows the king's position to be changed" do
+          it 'includes the occupied position' do
             allow(blocking_piece).to receive(:player_index).and_return(player_index ^ 1)
-            allow(king).to receive(:gets).and_return(blocking_position_input)
-            king.move(board, random_move_num)
-            expect(king.position).to eq(blocking_position)
+            expect(legal_positions).to include(blocking_position)
           end
         end
       end
 
       context "when the piece is the player's own" do
         10.times do
-          it 'prompts the user to enter a different position' do
+          it 'excludes the occupied position' do
             allow(blocking_piece).to receive(:player_index).and_return(player_index)
-            allow(king).to receive(:gets).and_return(blocking_position_input, legal_position_input)
-            expect(king).to receive(:puts).with(illegal_position_message)
-            king.move(board, random_move_num)
+            expect(legal_positions).not_to include(blocking_position)
           end
         end
       end
     end
+  end
+
+=begin
+# move to chess castle spec
 
     context 'when a castling move is possible for the king' do
       let(:rook1) { instance_double(Rook, player_index: player_index, position: [0, 7 * player_index], moved: false) }
@@ -244,8 +226,12 @@ describe King do
       end
     end
   end
+=end
 
   describe '#checked?' do
+    before do
+      allow(king).to receive(:checked?).and_call_original
+    end
     context "when an opponent's piece can check the player's king" do
       10.times do
         it 'returns true' do

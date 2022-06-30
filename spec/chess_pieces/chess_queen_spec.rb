@@ -32,7 +32,7 @@ describe Queen do
       end
       position
     end
-    let(:legal_positions) { queen.legal_next_positions([player_king], random_move_num) }
+    let(:legal_positions) { queen.legal_next_positions([player_king, queen], random_move_num) }
 
     before do
       allow(player_king).to receive(:is_a?).with(King).and_return(true)
@@ -78,7 +78,7 @@ describe Queen do
         end
       end
       let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
-      let(:board) { [player_king, blocking_piece] }
+      let(:board) { [player_king, blocking_piece, queen] }
       let(:legal_positions) { queen.legal_next_positions(board, random_move_num) }
       let(:before_position) do
         [random_position.first + (blocking_position.first <=> random_position.first),

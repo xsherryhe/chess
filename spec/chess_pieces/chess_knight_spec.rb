@@ -26,7 +26,7 @@ describe Knight do
                                                 .all? { |diff| diff > 2 }
       position
     end
-    let(:legal_positions) { knight.legal_next_positions([player_king], random_move_num) }
+    let(:legal_positions) { knight.legal_next_positions([player_king, knight], random_move_num) }
 
     before do
       allow(player_king).to receive(:is_a?).with(King).and_return(true)
@@ -71,7 +71,7 @@ describe Knight do
         end
       end
       let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
-      let(:board) { [player_king, blocking_piece] }
+      let(:board) { [player_king, blocking_piece, knight] }
       let(:legal_positions) { knight.legal_next_positions(board, random_move_num) }
 
       context "when the piece is the opponent's" do

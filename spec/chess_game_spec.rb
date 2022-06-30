@@ -8,6 +8,7 @@ describe Game do
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
+    allow(game).to receive(:display_board)
     allow(game).to receive(:puts)
   end
 
@@ -35,7 +36,6 @@ describe Game do
 
   describe '#play' do
     before do
-      allow(game).to receive(:display_board)
       allow(game).to receive(:display_check_state)
       allow(game).to receive(:player_action)
       allow(game).to receive(:display_draw_claim_state)
@@ -84,26 +84,28 @@ describe Game do
 
     10.times do
       it 'prompts the player for an input to determine their next action' do
-        prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
+        prompt_reg = Regexp.new("#{curr_player.name}: Please enter the move you wish to make.+\\r\\n\\(Or enter the word MENU to view other game options\\.\\)")
         expect(game).to receive(:puts).with(prompt_reg)
         game.player_action
       end
     end
 
-    context 'when a position on the board is entered' do
-      let(:movable_piece_position) { Array.new(2) { rand(8) } }
-      let(:movable_piece_position_input) do
-        ('a'..'h').to_a[movable_piece_position.first] + (movable_piece_position.last + 1).to_s
-      end
+    context 'when a move input is entered' do
+      let(:target_piece_position) { Array.new(2) { rand(8) } }
       let(:piece_next_position) do
         loop do
           pos = Array.new(2) { rand(8) }
-          return pos unless pos == movable_piece_position
+          return pos unless pos == target_piece_position
         end
       end
-      let(:movable_piece) { instance_double(Piece, player_index: curr_player_index, position: movable_piece_position) }
+      let(:move_input) do
+        [('a'..'h').to_a[target_piece_position.first] + (target_piece_position.last + 1).to_s,
+         ('a'..'h').to_a[piece_next_position.first] + (piece_next_position.last + 1).to_s]
+          .join(['to', 'TO', ' to ', ' TO '].sample)
+      end
+      let(:target_piece) { instance_double(Piece, player_index: curr_player_index, position: target_piece_position) }
       let(:capturable_piece) { instance_double(Piece, player_index: curr_player_index ^ 1, position: piece_next_position) }
-      let(:test_board) { [movable_piece, capturable_piece] }
+      let(:test_board) { [target_piece, capturable_piece] }
       let(:random_move_num) { rand(100) }
       let(:random_idle_moves) { rand(1..48) }
 
@@ -111,16 +113,17 @@ describe Game do
         game.instance_variable_set(:@board, test_board)
         game.instance_variable_set(:@move_num, random_move_num)
         game.instance_variable_set(:@idle_moves, random_idle_moves)
-        allow(movable_piece).to receive(:to_yaml).and_return('')
-        allow(movable_piece).to receive(:legal_next_positions).and_return([piece_next_position])
-        allow(movable_piece).to receive(:move) do
-          allow(movable_piece).to receive(:position).and_return(piece_next_position)
+        allow(target_piece).to receive(:to_yaml).and_return('')
+        allow(target_piece).to receive(:legal_next_positions).and_return([piece_next_position])
+        allow(target_piece).to receive(:illegal_check_next_positions).and_return([])
+        allow(target_piece).to receive(:move).with(piece_next_position, anything) do
+          allow(target_piece).to receive(:position).and_return(piece_next_position)
         end
       end
 
-      context 'when the position of a player piece that can be moved is entered' do
+      context 'when the position of a player piece and a legal next position for the piece are entered' do
         before do
-          allow(game).to receive(:gets).and_return(movable_piece_position_input)
+          allow(game).to receive(:gets).and_return(move_input)
         end
 
         10.times do
@@ -128,14 +131,9 @@ describe Game do
             expect { game.player_action }.to change { game.instance_variable_get(:@move_num) }.by(1)
           end
 
-          it 'sends a move message to the player piece' do
-            expect(movable_piece).to receive(:move).with(test_board, random_move_num + 1)
+          it 'sends a move message to the player piece with the target next position for the piece and the updated move number' do
+            expect(target_piece).to receive(:move).with(piece_next_position, random_move_num + 1)
             game.player_action
-          end
-
-          it "removes any captured pieces on the player piece's new position" do
-            game.player_action
-            expect(board).not_to include(capturable_piece)
           end
 
           it 'updates the game history' do
@@ -145,6 +143,11 @@ describe Game do
 
         context "when an opponent piece is captured by the player's move" do
           10.times do
+            it 'removes the captured piece' do
+              game.player_action
+              expect(board).not_to include(capturable_piece)
+            end
+
             it 'resets number of idle moves to zero' do
               game.player_action
               idle_moves = game.instance_variable_get(:@idle_moves)
@@ -154,11 +157,11 @@ describe Game do
         end
 
         context 'when the player piece is a pawn' do
-          let(:movable_piece) { instance_double(Pawn, player_index: curr_player_index, position: movable_piece_position) }
+          let(:target_piece) { instance_double(Pawn, player_index: curr_player_index, position: target_piece_position) }
           before do
-            allow(game).to receive(:display_board)
-            allow(movable_piece).to receive(:is_a?).with(Pawn).and_return(true)
-            allow(movable_piece).to receive(:en_passant).and_return(false)
+            allow(target_piece).to receive(:is_a?).and_return(false)
+            allow(target_piece).to receive(:is_a?).with(Pawn).and_return(true)
+            allow(target_piece).to receive(:en_passant).and_return(false)
           end
 
           context 'when the player piece is ready for promotion' do
@@ -170,8 +173,8 @@ describe Game do
             end
 
             before do
-              allow(movable_piece).to receive(:promoting).and_return(true)
-              allow(game).to receive(:gets).and_return(movable_piece_position_input, class_input.first)
+              allow(target_piece).to receive(:promoting).and_return(true)
+              allow(game).to receive(:gets).and_return(move_input, class_input.first)
             end
 
             context 'when the player enters a valid class to promote the pawn' do
@@ -204,7 +207,7 @@ describe Game do
                   allow(game).to receive(:gets) do
                     call_count += 1
                     if call_count == 1
-                      movable_piece_position_input
+                      move_input
                     elsif call_count == invalid_count + 2
                       class_input.first
                     else invalid_inputs.sample
@@ -219,7 +222,7 @@ describe Game do
 
           context 'when the player piece is not ready for promotion' do
             before do
-              allow(movable_piece).to receive(:promoting).and_return(false)
+              allow(target_piece).to receive(:promoting).and_return(false)
             end
 
             10.times do
@@ -240,7 +243,7 @@ describe Game do
         context 'when the move does not capture a piece and the player piece is not a pawn' do
           10.times do
             it 'adds 1 to the number of idle moves' do
-              game.instance_variable_set(:@board, [movable_piece])
+              game.instance_variable_set(:@board, [target_piece])
               game.player_action
               idle_moves = game.instance_variable_get(:@idle_moves)
               expect(idle_moves).to eql(random_idle_moves + 1)
@@ -249,49 +252,49 @@ describe Game do
         end
       end
 
-      context 'while the position of a player piece that cannot be moved is entered' do
-        let(:unmovable_piece_position) do
+      context 'while an input with the position of a square without a player piece is entered' do
+        let(:empty_position) do
           loop do
             pos = Array.new(2) { rand(8) }
-            unless [movable_piece_position, piece_next_position].include?(pos)
+            unless [target_piece_position, piece_next_position].include?(pos)
               return pos
             end
           end
         end
-        let(:unmovable_piece_position_input) do
-          ('a'..'h').to_a[unmovable_piece_position.first] + (unmovable_piece_position.last + 1).to_s
+        let(:empty_piece_position_input) do
+          [('a'..'h').to_a[empty_position.first] + (empty_position.last + 1).to_s,
+           ('a'..'h').to_a[piece_next_position.first] + (piece_next_position.last + 1).to_s]
+            .join(['to', 'TO', ' to ', ' TO '].sample)
         end
-        let(:unmovable_piece) { instance_double(Piece, player_index: curr_player_index, position: unmovable_piece_position) }
-        let(:test_board) { [movable_piece, capturable_piece, unmovable_piece] }
 
         10.times do
           it 'prompts the user to enter a position until a valid position is entered' do
-            allow(unmovable_piece).to receive(:to_yaml).and_return('')
-            allow(unmovable_piece).to receive(:legal_next_positions).and_return([])
             invalid_count = rand(1..100)
             call_count = 0
             allow(game).to receive(:gets) do
               call_count += 1
-              call_count == invalid_count + 1 ? movable_piece_position_input : unmovable_piece_position_input
+              call_count == invalid_count + 1 ? move_input : empty_piece_position_input
             end
-            error_reg = /There are no legal moves for this piece\. Please select a different piece to move\. Please enter the square of the piece that you wish to move/
+            error_reg = /You don't have a piece on that square!\r\nPlease enter the move you wish to make/
             expect(game).to receive(:puts).with(error_reg).exactly(invalid_count).times
             game.player_action
           end
         end
       end
 
-      context 'while the position of a square without a player piece is entered' do
-        let(:empty_position) do
+      context 'while an input with the position of a player piece and an illegal next position for the piece are entered' do
+        let(:illegal_next_position) do
           loop do
             pos = Array.new(2) { rand(8) }
-            unless [movable_piece_position, piece_next_position].include?(pos)
+            unless [target_piece_position, piece_next_position].include?(pos)
               return pos
             end
           end
         end
-        let(:empty_position_input) do
-          ('a'..'h').to_a[empty_position.first] + (empty_position.last + 1).to_s
+        let(:illegal_move_input) do
+          [('a'..'h').to_a[target_piece_position.first] + (target_piece_position.last + 1).to_s,
+           ('a'..'h').to_a[illegal_next_position.first] + (illegal_next_position.last + 1).to_s]
+            .join(['to', 'TO', ' to ', ' TO '].sample)
         end
 
         10.times do
@@ -300,11 +303,31 @@ describe Game do
             call_count = 0
             allow(game).to receive(:gets) do
               call_count += 1
-              call_count == invalid_count + 1 ? movable_piece_position_input : empty_position_input
+              call_count == invalid_count + 1 ? move_input : illegal_move_input
             end
-            error_reg = /You don't have a piece on that square! Please enter the square of the piece that you wish to move/
+            error_reg = /Illegal move!\r\nPlease enter the move you wish to make/
             expect(game).to receive(:puts).with(error_reg).exactly(invalid_count).times
             game.player_action
+          end
+        end
+
+        context 'when the illegal next position would leave the king in check' do
+          before do
+            allow(target_piece).to receive(:illegal_check_next_positions).and_return([illegal_next_position])
+          end
+
+          10.times do
+            it 'prompts the user with a message about leaving the king in check until a valid position is entered' do
+              invalid_count = rand(1..100)
+              call_count = 0
+              allow(game).to receive(:gets) do
+                call_count += 1
+                call_count == invalid_count + 1 ? move_input : illegal_move_input
+              end
+              error_reg = /Illegal move! This move would leave your king in check\.\r\nPlease enter the move you wish to make/
+              expect(game).to receive(:puts).with(error_reg).exactly(invalid_count).times
+              game.player_action
+            end
           end
         end
       end
@@ -315,7 +338,7 @@ describe Game do
         it 'prompts the user to enter an input until a valid input is entered' do
           invalid_count = rand(100)
           call_count = 0
-          invalid_inputs = ["I don't know", 'Z1', 'A9', 'f23', 'b', '[0, 1]', '20', 'no', ':help', '(']
+          invalid_inputs = ["I don't know", 'Z1', 'A9', 'Y1 to A8', 'B1 to A9', 'f23', 'b', '[0, 1]', '[1, 1] to [0, 1]', '20', 'no', ':help', '(']
           allow(game).to receive(:gets) do
             call_count += 1
             if call_count == invalid_count + 1
@@ -325,7 +348,7 @@ describe Game do
             else invalid_inputs.sample
             end
           end
-          error_reg = /Invalid input! Please enter the square of the piece that you wish to move.+\(Or enter the word MENU to view other game options\.\)/
+          error_reg = /Invalid input!\r\nPlease enter the move you wish to make.+\(Or enter the word MENU to view other game options\.\)/
           expect(game).to receive(:puts).with(error_reg).exactly(invalid_count).times
           game.player_action
         end

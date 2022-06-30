@@ -28,7 +28,7 @@ describe Bishop do
       end
       position
     end
-    let(:legal_positions) { bishop.legal_next_positions([player_king], random_move_num) }
+    let(:legal_positions) { bishop.legal_next_positions([player_king, bishop], random_move_num) }
 
     before do
       allow(player_king).to receive(:is_a?).with(King).and_return(true)
@@ -45,7 +45,7 @@ describe Bishop do
       end
     end
 
-    context 'when a position would place the king in check' do
+    context "when a position would place the player's king in check" do
       before do
         allow(player_king).to receive(:checked?).with(anything, array_including(having_attributes(position: legal_position)), anything).and_return(true)
       end
@@ -72,7 +72,7 @@ describe Bishop do
         end
       end
       let(:blocking_piece) { instance_double(Piece, position: blocking_position) }
-      let(:board) { [player_king, blocking_piece] }
+      let(:board) { [player_king, blocking_piece, bishop] }
       let(:legal_positions) { bishop.legal_next_positions(board, random_move_num) }
       let(:before_position) do
         [random_position.first + (blocking_position.first <=> random_position.first),

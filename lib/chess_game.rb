@@ -42,8 +42,8 @@ class Game
   end
 
   def player_action
-    puts "#{curr_player.name}: #{move_instruction}"
-    puts game_menu_instruction
+    puts "#{curr_player.name}: #{move_instruction}" \
+          "\r\n#{game_menu_instruction}"
     action = valid_input
     if action.is_a?(String)
       return game_menu if action.downcase == 'menu'
