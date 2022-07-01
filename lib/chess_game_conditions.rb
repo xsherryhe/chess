@@ -14,7 +14,7 @@ module GameConditions
     display_board
     puts draw_claim_message(repetition_of_positions, fifty_idle_moves)
     puts "#{curr_player.name}, do you wish to claim a draw?"
-    return draw_claim_refusal unless gets.chomp =~ /^yes$|^y$/i
+    return draw_claim_refusal unless curr_player.claim_draw? =~ /^yes$|^y$/i
 
     puts 'The game ends in a draw.'
     @game_over = true
@@ -30,7 +30,7 @@ module GameConditions
   private
 
   def check
-    player_king.checked?(player_king.position, @board, @move_num)
+    player_king.checked?(player_king.position, board, move_num)
   end
 
   def draw_claim_message(repetition_of_positions, fifty_idle_moves)
@@ -52,16 +52,9 @@ module GameConditions
     gets
   end
 
-  def draw_propose_refusal
-    puts "#{curr_opponent.name} does not accept the proposal of draw. " \
-         'The current game will continue.'
-    puts 'Press ENTER to continue.'
-    gets
-  end
-
   def no_legal_moves
-    @board.select { |piece| player?(piece) }
-          .all? { |piece| piece.legal_next_positions(@board, @move_num).empty? }
+    board.select { |piece| player?(piece) }
+         .all? { |piece| piece.legal_next_positions(board, move_num).empty? }
   end
 
   def color_message(condition)

@@ -11,7 +11,7 @@ class King < Piece
     @moved = false
   end
 
-  def move(goal_pos)
+  def move(goal_pos, *)
     super
     @moved = true
   end

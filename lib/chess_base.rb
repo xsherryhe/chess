@@ -34,4 +34,8 @@ module BaseMethods
     pos = [col.ord - 65, row.to_i - 1]
     pos.all? { |dir| dir.between?(0, 7) } ? pos : nil
   end
+
+  def from_pos(pos)
+    ('A'..'H').to_a[pos.first] + (pos.last + 1).to_s
+  end
 end

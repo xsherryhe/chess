@@ -11,10 +11,6 @@ module GameMenu
 
   private
 
-  def game_menu_instruction
-    '(Or enter the word MENU to view other game options.)'
-  end
-
   def game_menu
     until @menu_done
       puts game_menu_options
@@ -85,11 +81,17 @@ module GameMenu
   def propose_draw
     @menu_done = true
     puts "#{curr_player.name} proposes a draw of the current game."
-    puts "#{curr_opponent.name}, do you accept the proposal of draw?"
-    return draw_propose_refusal unless gets.chomp =~ /^yes$|^y$/i
+    return draw_refusal unless curr_opponent.accept_draw? =~ /^yes$|^y$/i
 
     puts 'The game ends in a draw.'
     @game_over = true
+  end
+
+  def draw_refusal
+    puts "#{curr_opponent.name} does not accept the proposal of draw. " \
+         'The current game will continue.'
+    puts 'Press ENTER to continue.'
+    gets
   end
 
   def exit_game
