@@ -60,10 +60,17 @@ module GameMenu
     'LETTER refers to the columns of the chess board ' \
     "and runs from A to H.\r\n" \
     'NUMBER refers to the rows of the chess board ' \
-    "and runs from 1 to 8.\r\n" \
-    "So, examples of valid inputs are:\r\n" \
-    "     A1 F6 G8 H4\r\n" \
+    "and runs from 1 to 8.\r\n\r\n" \
+    "Move inputs should be entered using the format:\r\n" \
+    "(LETTER + NUMBER) to (LETTER + NUMBER)\r\n" \
+    "So, examples of valid moves might be:\r\n#{valid_input_examples}\r\n" \
     'Inputs that do not follow this format will not be accepted.'
+  end
+
+  def valid_input_examples
+    ['A2 to A3', 'F6 to E8', 'G8 to C8', 'H3 to D7']
+      .map { |example| ' ' * 5 + example }
+      .join("\r\n")
   end
 
   def resign_game

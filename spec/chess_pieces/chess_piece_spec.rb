@@ -24,27 +24,6 @@ describe Piece do
         expect(piece.position).to eq(legal_position)
       end
     end
-=begin
-    # move to game class
-    context 'while an invalid input is entered' do
-      10.times do
-        it 'prompts the user to enter an input until a valid input is entered' do
-          invalid_count = rand(100)
-          call_count = 0
-          invalid_inputs = ['Z1', 'A9', 'f23', 'b', '[0, 1]', '75']
-          allow(piece).to receive(:gets) do
-            call_count += 1
-            call_count == invalid_count + 1 ? legal_position_input : invalid_inputs.sample
-          end
-          expect(piece)
-            .to receive(:puts)
-            .with('Invalid input! Please enter a square for the piece that can be reached with a legal move. Please use the format LETTER + NUMBER (e.g., "A1").')
-            .exactly(invalid_count).times
-          piece.move([], random_move_num)
-        end
-      end
-    end
-=end
   end
 
   describe '::from_yaml' do

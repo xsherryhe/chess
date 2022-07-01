@@ -31,7 +31,7 @@ module Castle
     valid_rook_display(rooks) +
       "\r\nPlease enter the square of the rook " \
       'that you would like your king to castle with' +
-      (@move_num < 2 ? ', using the format "LETTER + NUMBER".' : '.')
+      (@move_num < 2 ? ', using the format LETTER + NUMBER.' : '.')
   end
 
   def valid_rook_display(rooks)
@@ -43,7 +43,7 @@ module Castle
 
   def rook_error_message
     'Invalid square! Please enter the square of a valid rook to castle with. ' \
-    'Please use the format "LETTER + NUMBER" (e.g., "A1").'
+    'Please use the format LETTER + NUMBER (e.g., "A1").'
   end
 
   def rooks_to_castle

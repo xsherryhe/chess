@@ -76,10 +76,36 @@ describe Game do
     let(:curr_player_index) { rand(2) }
     let(:curr_player) { [white_player, black_player][curr_player_index] }
     let(:opponent_player) { [white_player, black_player][curr_player_index ^ 1] }
+    let(:target_piece_position) { Array.new(2) { rand(8) } }
+    let(:piece_next_position) do
+      loop do
+        pos = Array.new(2) { rand(8) }
+        return pos unless pos == target_piece_position
+      end
+    end
+    let(:target_piece) { instance_double(Piece, player_index: curr_player_index, position: target_piece_position) }
+    let(:capturable_piece) { instance_double(Piece, player_index: curr_player_index ^ 1, position: piece_next_position) }
+    let(:test_board) { [target_piece, capturable_piece] }
+    let(:random_move_num) { rand(100) }
+    let(:random_idle_moves) { rand(1..48) }
+    let(:move_input) do
+      [('a'..'h').to_a[target_piece_position.first] + (target_piece_position.last + 1).to_s,
+       ('a'..'h').to_a[piece_next_position.first] + (piece_next_position.last + 1).to_s]
+        .join(['to', 'TO', ' to ', ' TO '].sample)
+    end
 
     before do
       game.instance_variable_set(:@curr_player_index, curr_player_index)
-      allow(game).to receive(:gets).and_return(%w[menu MENU].sample, %w[back BACK 8].sample)
+      game.instance_variable_set(:@board, test_board)
+      game.instance_variable_set(:@move_num, random_move_num)
+      game.instance_variable_set(:@idle_moves, random_idle_moves)
+      allow(target_piece).to receive(:to_yaml).and_return('')
+      allow(target_piece).to receive(:legal_next_positions).and_return([piece_next_position])
+      allow(target_piece).to receive(:illegal_check_next_positions).and_return([])
+      allow(target_piece).to receive(:move).with(piece_next_position, anything) do
+        allow(target_piece).to receive(:position).and_return(piece_next_position)
+      end
+      allow(game).to receive(:gets).and_return(move_input)
     end
 
     10.times do
@@ -90,37 +116,7 @@ describe Game do
       end
     end
 
-    context 'when a move input is entered' do
-      let(:target_piece_position) { Array.new(2) { rand(8) } }
-      let(:piece_next_position) do
-        loop do
-          pos = Array.new(2) { rand(8) }
-          return pos unless pos == target_piece_position
-        end
-      end
-      let(:move_input) do
-        [('a'..'h').to_a[target_piece_position.first] + (target_piece_position.last + 1).to_s,
-         ('a'..'h').to_a[piece_next_position.first] + (piece_next_position.last + 1).to_s]
-          .join(['to', 'TO', ' to ', ' TO '].sample)
-      end
-      let(:target_piece) { instance_double(Piece, player_index: curr_player_index, position: target_piece_position) }
-      let(:capturable_piece) { instance_double(Piece, player_index: curr_player_index ^ 1, position: piece_next_position) }
-      let(:test_board) { [target_piece, capturable_piece] }
-      let(:random_move_num) { rand(100) }
-      let(:random_idle_moves) { rand(1..48) }
-
-      before do
-        game.instance_variable_set(:@board, test_board)
-        game.instance_variable_set(:@move_num, random_move_num)
-        game.instance_variable_set(:@idle_moves, random_idle_moves)
-        allow(target_piece).to receive(:to_yaml).and_return('')
-        allow(target_piece).to receive(:legal_next_positions).and_return([piece_next_position])
-        allow(target_piece).to receive(:illegal_check_next_positions).and_return([])
-        allow(target_piece).to receive(:move).with(piece_next_position, anything) do
-          allow(target_piece).to receive(:position).and_return(piece_next_position)
-        end
-      end
-
+    context 'when a standard move input is entered' do
       context 'when the position of a player piece and a legal next position for the piece are entered' do
         before do
           allow(game).to receive(:gets).and_return(move_input)
@@ -333,6 +329,175 @@ describe Game do
       end
     end
 
+    context 'when a castling move is possible' do
+      let(:player_rook1) { instance_double(Rook, player_index: curr_player_index, position: [0, 7 * curr_player_index], moved: false) }
+      let(:player_rook2) { instance_double(Rook, player_index: curr_player_index, position: [7, 7 * curr_player_index], moved: false) }
+      let(:player_rook) { [player_rook1, player_rook2].sample }
+      let(:player_king) { instance_double(King, player_index: curr_player_index, position: [4, 7 * curr_player_index], moved: false) }
+      let(:test_board) { [player_rook, player_king, target_piece] }
+      let(:target_piece_position) { [rand(8), rand(1..6)] }
+      let(:piece_next_position) do
+        loop do
+          pos = [rand(8), rand(1..6)]
+          return pos unless pos == target_piece_position
+        end
+      end
+
+      before do
+        [player_rook1, player_rook2, player_king].each do |piece|
+          allow(piece).to receive(:is_a?).and_return(false)
+          allow(piece).to receive(:position=) do |new_pos|
+            allow(piece).to receive(:position).and_return(new_pos)
+          end
+        end
+
+        allow(player_king).to receive(:is_a?).with(King).and_return(true)
+        allow(player_king).to receive(:checked?).and_return(false)
+        allow(player_rook1).to receive(:is_a?).with(Rook).and_return(true)
+        allow(player_rook2).to receive(:is_a?).with(Rook).and_return(true)
+      end
+
+      10.times do
+        it 'prompts the user with a castling-specific instruction' do
+          expect(game).to receive(:puts).with(/Castling is also available\. Enter the word CASTLE to make a castling move\./)
+          game.player_action
+        end
+
+        it 'still allows other move inputs' do
+          expect(target_piece).to receive(:move).with(piece_next_position, random_move_num + 1)
+          game.player_action
+        end
+      end
+
+      context 'when the word "castle" is entered' do
+        before do
+          allow(game).to receive(:gets).and_return(%w[castle CASTLE].sample)
+        end
+
+        context 'when a castling move is possible with one rook' do
+          10.times do
+            it 'increases the move number of the game' do
+              expect { game.player_action }.to change { game.instance_variable_get(:@move_num) }.by(1)
+            end
+
+            it "sends a message to change the rook's position" do
+              new_rook_position = [player_rook == player_rook1 ? 3 : 5, curr_player_index * 7]
+              expect(player_rook).to receive(:position=).with(new_rook_position)
+              game.player_action
+            end
+
+            it "sends a message to change the king's position" do
+              new_king_position = [player_rook == player_rook1 ? 2 : 6, curr_player_index * 7]
+              expect(player_king).to receive(:position=).with(new_king_position)
+              game.player_action
+            end
+
+            it 'updates the game history' do
+              expect { game.player_action }.to change { game.instance_variable_get(:@history).size }.by(1)
+            end
+
+            it 'adds 1 to the number of idle moves' do
+              game.player_action
+              idle_moves = game.instance_variable_get(:@idle_moves)
+              expect(idle_moves).to eql(random_idle_moves + 1)
+            end
+          end
+        end
+
+        context 'when a castling move is possible with both rooks' do
+          let(:test_board) { [player_rook1, player_rook2, player_king, target_piece] }
+          let(:rook_position_inputs) do
+            [[0, 7 * curr_player_index], [7, 7 * curr_player_index]].map do |pos|
+              ('a'..'h').to_a[pos.first] + (pos.last + 1).to_s
+            end
+          end
+          let(:rook_position_input) { rook_position_inputs.sample }
+          let(:player_rook) do
+            [player_rook1, player_rook2].find do |rook|
+              col, row = rook_position_input.upcase.chars
+              rook.position == [col.ord - 65, row.to_i - 1]
+            end
+          end
+
+          before do
+            allow(game).to receive(:gets).and_return(%w[castle CASTLE].sample, rook_position_input)
+          end
+
+          10.times do
+            it 'displays a list of rooks to castle and prompts the user to select a rook position' do
+              rook_message_reg = Regexp.new(
+                "Your king can castle with the following rooks at: #{rook_position_inputs.map(&:upcase).join(', ')}" \
+                "\r\nPlease enter the square of the rook that you would like your king to castle with"
+              )
+              expect(game).to receive(:puts).with(rook_message_reg)
+              game.player_action
+            end
+          end
+
+          context 'when a valid rook position is entered' do
+            10.times do
+              it "sends a message to change the rook's position" do
+                new_rook_position = [player_rook == player_rook1 ? 3 : 5, curr_player_index * 7]
+                expect(player_rook).to receive(:position=).with(new_rook_position)
+                game.player_action
+              end
+
+              it "sends a message to change the king's position" do
+                new_king_position = [player_rook == player_rook1 ? 2 : 6, curr_player_index * 7]
+                expect(player_king).to receive(:position=).with(new_king_position)
+                game.player_action
+              end
+            end
+          end
+
+          context 'while an invalid rook position is entered' do
+            let(:illegal_rook_position_input) do
+              loop do
+                input = ('a'..'h').to_a.sample + (1..8).to_a.sample.to_s
+                return input unless rook_position_inputs.include?(input)
+              end
+            end
+
+            10.times do
+              it 'prompts the user to enter a rook position until a valid rook position is entered' do
+                illegal_inputs = rand(100)
+                call_count = 0
+                allow(game).to receive(:gets) do
+                  call_count += 1
+                  case call_count
+                  when 1 then 'castle'
+                  when illegal_inputs + 2 then rook_position_input
+                  else illegal_rook_position_input
+                  end
+                end
+                expect(game)
+                  .to receive(:puts)
+                  .with('Invalid square! Please enter the square of a valid rook to castle with. Please use the format LETTER + NUMBER (e.g., "A1").')
+                  .exactly(illegal_inputs).times
+                game.player_action
+              end
+            end
+          end
+        end
+      end
+    end
+
+    context 'while the word "castle" is entered and a castling move is not possible' do
+      10.times do
+        it 'prompts the user to enter a different input until a valid input is entered' do
+          castle_input_count = rand(100)
+          call_count = 0
+          allow(game).to receive(:gets) do
+            call_count += 1
+            call_count == castle_input_count + 1 ? move_input : 'castle'
+          end
+          error_reg = /Invalid input!\r\nPlease enter the move you wish to make.+\(Or enter the word MENU to view other game options\.\)/
+          expect(game).to receive(:puts).with(error_reg).exactly(castle_input_count).times
+          game.player_action
+        end
+      end
+    end
+
     context 'while an invalid input is entered' do
       10.times do
         it 'prompts the user to enter an input until a valid input is entered' do
@@ -341,12 +506,7 @@ describe Game do
           invalid_inputs = ["I don't know", 'Z1', 'A9', 'Y1 to A8', 'B1 to A9', 'f23', 'b', '[0, 1]', '[1, 1] to [0, 1]', '20', 'no', ':help', '(']
           allow(game).to receive(:gets) do
             call_count += 1
-            if call_count == invalid_count + 1
-              'menu'
-            elsif call_count == invalid_count + 2
-              'back'
-            else invalid_inputs.sample
-            end
+            call_count == invalid_count + 1 ? move_input : invalid_inputs.sample
           end
           error_reg = /Invalid input!\r\nPlease enter the move you wish to make.+\(Or enter the word MENU to view other game options\.\)/
           expect(game).to receive(:puts).with(error_reg).exactly(invalid_count).times
