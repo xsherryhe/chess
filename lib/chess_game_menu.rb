@@ -46,8 +46,7 @@ module GameMenu
 
   def display_game_instructions
     puts "\r\n" + chess_introduction + "\r\n\r\n" + pos_input_instruction
-    puts 'Press ENTER to continue.'
-    gets
+    enter_to_continue
   end
 
   def pos_input_instruction
@@ -76,6 +75,7 @@ module GameMenu
 
     puts "#{curr_opponent.name} has won the game!"
     exit_game
+    exit_to_main_menu
   end
 
   def propose_draw
@@ -85,13 +85,13 @@ module GameMenu
 
     puts 'The game ends in a draw.'
     @game_over = true
+    exit_to_main_menu
   end
 
   def draw_refusal
     puts "#{curr_opponent.name} does not accept the proposal of draw. " \
          'The current game will continue.'
-    puts 'Press ENTER to continue.'
-    gets
+    enter_to_continue
   end
 
   def exit_game

@@ -55,7 +55,7 @@ class HumanPlayer < Player
   end
 
   def accept_draw?
-    puts "#{curr_opponent.name}, do you accept the proposal of draw?"
+    puts "#{name}, do you accept the proposal of draw?"
     gets.chomp
   end
 
@@ -125,22 +125,17 @@ class ComputerPlayer < Player
     return if action == 'castle'
 
     puts [from_pos(action.first.position), from_pos(action.last)].join(' to ')
-    finish_display
+    enter_to_continue
   end
 
   def display_castle_action(rook)
     puts "Castle king with rook at #{from_pos(rook.position)}"
-    finish_display
+    enter_to_continue
   end
 
   def display_promote_class(promote_class)
     sleep(0.5)
     puts "Computer promotes pawn to #{promote_class.name}."
-    finish_display
-  end
-
-  def finish_display
-    puts 'Press ENTER to continue.'
-    gets
+    enter_to_continue
   end
 end
