@@ -9,8 +9,8 @@ module Castle
     king = player_king
     rook = curr_player.select_rook(rooks_to_castle, self)
 
-    king.position = castle_king_position(king, rook)
-    rook.position = castle_rook_position(king, rook)
+    king.move(castle_king_position(king, rook), move_num)
+    rook.move(castle_rook_position(king, rook), move_num)
   end
 
   def rooks_to_castle
