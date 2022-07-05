@@ -41,10 +41,10 @@ describe Chess do
       end
     end
 
-    context 'when the word "exit" or "5" is entered' do
+    context 'when the word "exit" or "6" is entered' do
       10.times do
         it 'exits the method' do
-          allow(Chess).to receive(:gets).and_return(%w[exit EXIT 5].sample)
+          allow(Chess).to receive(:gets).and_return(%w[exit EXIT 6].sample)
           Chess.run
         end
       end
@@ -52,7 +52,7 @@ describe Chess do
 
     context 'when the word "new" or "1" is entered' do
       before do
-        allow(Chess).to receive(:gets).and_return(%w[new NEW 1].sample, %w[exit EXIT 5].sample)
+        allow(Chess).to receive(:gets).and_return(%w[new NEW 1].sample, %w[exit EXIT 6].sample)
         allow(Game).to receive(:new).and_return(game)
       end
 
@@ -69,12 +69,12 @@ describe Chess do
       end
     end
 
-    context 'when the word "load" or "2" is entered' do
+    context 'when the word "load" or "3" is entered' do
       before do
         clear_save_record
         clear_save_dir
         allow(Game).to receive(:from_yaml).and_return(game)
-        allow(Chess).to receive(:gets).and_return(%w[load LOAD 2].sample, existing_save_name, '', %w[exit EXIT 5].sample)
+        allow(Chess).to receive(:gets).and_return(%w[load LOAD 3].sample, existing_save_name, '', %w[exit EXIT 6].sample)
       end
 
       after do
@@ -116,7 +116,7 @@ describe Chess do
 
         context 'when the words "go back" are entered' do
           before do
-            allow(Chess).to receive(:gets).and_return(%w[load LOAD 2].sample, ['go back', 'GO BACK'].sample, %w[exit EXIT 5].sample)
+            allow(Chess).to receive(:gets).and_return(%w[load LOAD 3].sample, ['go back', 'GO BACK'].sample, %w[exit EXIT 6].sample)
           end
 
           10.times do
@@ -136,10 +136,10 @@ describe Chess do
           let(:non_existing_save_names) { ['save1', 'SAVE1', '123', 'test', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
 
           before do
-            allow(Chess).to receive(:gets).and_return(%w[load LOAD 2].sample,
+            allow(Chess).to receive(:gets).and_return(%w[load LOAD 3].sample,
                                                       non_existing_save_names.sample,
                                                       ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample,
-                                                      %w[exit EXIT 5].sample)
+                                                      %w[exit EXIT 6].sample)
           end
 
           10.times do
@@ -170,9 +170,9 @@ describe Chess do
                 call_count = 0
                 allow(Chess).to receive(:gets) do
                   call_count += 1
-                  if call_count == 1 then %w[load LOAD 2].sample
+                  if call_count == 1 then %w[load LOAD 3].sample
                   elsif call_count == no_menu_count * 2 + 3 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
-                  elsif call_count == no_menu_count * 2 + 4 then %w[exit EXIT 5].sample
+                  elsif call_count == no_menu_count * 2 + 4 then %w[exit EXIT 6].sample
                   elsif call_count.even? then non_existing_save_names.sample
                   else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                   end
@@ -187,10 +187,10 @@ describe Chess do
                 call_count = 0
                 allow(Chess).to receive(:gets) do
                   call_count += 1
-                  if call_count == 1 then %w[load LOAD 2].sample
+                  if call_count == 1 then %w[load LOAD 3].sample
                   elsif call_count == invalid_count * 2 + 2 then existing_save_name
                   elsif call_count == invalid_count * 2 + 3 then ''
-                  elsif call_count == invalid_count * 2 + 4 then %w[exit EXIT 5].sample
+                  elsif call_count == invalid_count * 2 + 4 then %w[exit EXIT 6].sample
                   elsif call_count.even? then non_existing_save_names.sample
                   else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                   end
@@ -206,7 +206,7 @@ describe Chess do
 
       context 'when previous save files do not exist' do
         before do
-          allow(Chess).to receive(:gets).and_return(%w[load LOAD 2].sample, %w[exit EXIT 5].sample)
+          allow(Chess).to receive(:gets).and_return(%w[load LOAD 3].sample, %w[exit EXIT 6].sample)
         end
 
         it 'outputs a no save files message' do
@@ -226,14 +226,14 @@ describe Chess do
       end
     end
 
-    context 'when the word "delete" or "3" is entered' do
+    context 'when the word "delete" or "4" is entered' do
       before do
         clear_save_record
         clear_save_dir
-        allow(Chess).to receive(:gets).and_return(%w[delete DELETE 3].sample,
+        allow(Chess).to receive(:gets).and_return(%w[delete DELETE 4].sample,
                                                   existing_save_name,
                                                   ['n', 'N', 'no', 'NO', 'yesterday', ''].sample,
-                                                  '', %w[exit EXIT 5].sample)
+                                                  '', %w[exit EXIT 6].sample)
       end
 
       after do
@@ -300,10 +300,10 @@ describe Chess do
                 call_count = 0
                 allow(Chess).to receive(:gets) do
                   call_count += 1
-                  if call_count == 1 then %w[delete DELETE 3].sample
+                  if call_count == 1 then %w[delete DELETE 4].sample
                   elsif call_count == extra_delete_count * 2 + 3 then ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                   elsif call_count == extra_delete_count * 2 + 4 then ''
-                  elsif call_count == extra_delete_count * 2 + 5 then %w[exit EXIT 5].sample
+                  elsif call_count == extra_delete_count * 2 + 5 then %w[exit EXIT 6].sample
                   elsif call_count.even?
                     save_name = all_existing_save_names.sample
                     all_existing_save_names.reject! { |name| name.downcase == save_name.downcase }
@@ -358,7 +358,7 @@ describe Chess do
 
         context 'when the words "go back" are entered' do
           before do
-            allow(Chess).to receive(:gets).and_return(%w[delete DELETE 3].sample, ['go back', 'GO BACK'].sample, %w[exit EXIT 5].sample)
+            allow(Chess).to receive(:gets).and_return(%w[delete DELETE 4].sample, ['go back', 'GO BACK'].sample, %w[exit EXIT 6].sample)
           end
 
           10.times do
@@ -385,10 +385,10 @@ describe Chess do
           let(:non_existing_save_names) { ['save1', 'SAVE1', '123', 'test', '0' * 15, '', ' ', '@saving', '(', '\\', 'test-123', 'my save!'] }
 
           before do
-            allow(Chess).to receive(:gets).and_return(%w[delete DELETE 3].sample,
+            allow(Chess).to receive(:gets).and_return(%w[delete DELETE 4].sample,
                                                       non_existing_save_names.sample,
                                                       ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample,
-                                                      %w[exit EXIT 5].sample)
+                                                      %w[exit EXIT 6].sample)
           end
 
           10.times do
@@ -426,9 +426,9 @@ describe Chess do
                 call_count = 0
                 allow(Chess).to receive(:gets) do
                   call_count += 1
-                  if call_count == 1 then %w[delete DELETE 3].sample
+                  if call_count == 1 then %w[delete DELETE 4].sample
                   elsif call_count == no_menu_count * 2 + 3 then ['y', 'Y', 'yes', 'YES', 'go back', 'GO BACK'].sample
-                  elsif call_count == no_menu_count * 2 + 4 then %w[exit EXIT 5].sample
+                  elsif call_count == no_menu_count * 2 + 4 then %w[exit EXIT 6].sample
                   elsif call_count.even? then non_existing_save_names.sample
                   else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                   end
@@ -443,10 +443,10 @@ describe Chess do
                 call_count = 0
                 allow(Chess).to receive(:gets) do
                   call_count += 1
-                  if call_count == 1 then %w[delete DELETE 3].sample
+                  if call_count == 1 then %w[delete DELETE 4].sample
                   elsif call_count == invalid_count * 2 + 2 then existing_save_name
                   elsif call_count == invalid_count * 2 + 4 then ''
-                  elsif call_count == invalid_count * 2 + 5 then %w[exit EXIT 5].sample
+                  elsif call_count == invalid_count * 2 + 5 then %w[exit EXIT 6].sample
                   elsif call_count.even? then non_existing_save_names.sample
                   else ['n', 'N', 'no', 'NO', 'yesterday', ''].sample
                   end
@@ -462,7 +462,7 @@ describe Chess do
 
       context 'when previous save files do not exist' do
         before do
-          allow(Chess).to receive(:gets).and_return(%w[delete DELETE 3].sample, %w[exit EXIT 5].sample)
+          allow(Chess).to receive(:gets).and_return(%w[delete DELETE 4].sample, %w[exit EXIT 6].sample)
         end
 
         it 'does not change the save directory' do
@@ -484,15 +484,15 @@ describe Chess do
       end
     end
 
-    context 'while the word "help" or "4" is entered' do
+    context 'while the word "help" or "5" is entered' do
       10.times do
         it 'outputs chess information the corresponding number of times' do
           help_count = rand(100)
           call_count = 0
           allow(Chess).to receive(:gets) do
             call_count += 1
-            if call_count == (help_count * 2) + 1 then %w[exit EXIT 5].sample
-            elsif call_count.odd? then %w[help HELP 4].sample
+            if call_count == (help_count * 2) + 1 then %w[exit EXIT 6].sample
+            elsif call_count.odd? then %w[help HELP 5].sample
             else ''
             end
           end
@@ -511,7 +511,7 @@ describe Chess do
           invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
           allow(Chess).to receive(:gets) do
             call_count += 1
-            call_count == invalid_count + 1 ?  %w[exit EXIT 5].sample : invalid_inputs.sample
+            call_count == invalid_count + 1 ?  %w[exit EXIT 6].sample : invalid_inputs.sample
           end
           expect(Chess).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
           Chess.run

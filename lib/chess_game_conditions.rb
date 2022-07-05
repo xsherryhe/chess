@@ -13,7 +13,6 @@ module GameConditions
 
     display_board
     puts draw_claim_message(repetition, idle_moves)
-    puts "#{curr_player.name}, do you wish to claim a draw?"
     return draw_claim_refusal unless curr_player.claim_draw? =~ /^yes$|^y$/i
 
     puts 'The game ends in a draw.'

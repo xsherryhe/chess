@@ -51,6 +51,7 @@ class HumanPlayer < Player
   end
 
   def claim_draw?
+    puts "#{name}, do you wish to claim a draw?"
     gets.chomp
   end
 

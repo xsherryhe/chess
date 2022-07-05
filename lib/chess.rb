@@ -30,10 +30,10 @@ module Chess
     case gets.chomp
     when /^1$|^new$/i then Game.new.play
     when /^2$|^computer$/i then Game.new(false, true).play
-    when /^2$|^load$/i then load_game
-    when /^3$|^delete$/i then delete_game
-    when /^4$|^help$/i then display_information
-    when /^5$|^exit$/i then @menu_done = true
+    when /^3$|^load$/i then load_game
+    when /^4$|^delete$/i then delete_game
+    when /^5$|^help$/i then display_information
+    when /^6$|^exit$/i then @menu_done = true
     else puts 'Invalid input!'
     end
   end
