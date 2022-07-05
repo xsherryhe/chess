@@ -1,27 +1,5 @@
-# frozen_string_literal: true
-
-require 'yaml'
-require_relative '../lib/chess_player.rb'
-require_relative '../lib/chess_game.rb'
-
-describe Player do
-  describe '::from_yaml' do
-    10.times do
-      it 'creates a player using data from the given string' do
-        saved_class = [HumanPlayer, ComputerPlayer].sample
-        saved_player_index = rand(2)
-        saved_name = rand(100).to_s + ('A'..'Z').to_a.sample
-        saved_player_string = YAML.dump('class' => saved_class.name,
-                                        'data' => { 'player_index' => saved_player_index,
-                                                    'name' => saved_name })
-        player = described_class.from_yaml(saved_player_string)
-        expect(player).to be_a(saved_class)
-        expect(player.player_index).to eq(saved_player_index)
-        expect(player.name).to eq(saved_name)
-      end
-    end
-  end
-end
+require_relative '../../lib/chess_player.rb'
+require_relative '../../lib/chess_game.rb'
 
 describe HumanPlayer do
   let(:player_index) { rand(2) }
@@ -34,12 +12,23 @@ describe HumanPlayer do
 
   describe '#initialize' do
     context 'when the name argument is not provided' do
-      it 'prompts the user for a player name' do
-        
+      subject(:no_name_player) { described_class.new(player_index) }
+
+      before do
+        allow_any_instance_of(Object).to receive(:puts)
+        allow_any_instance_of(Object).to receive(:gets).and_return(name)
       end
 
-      it 'sets the name variable to user input' do
-        
+      10.times do
+        it 'prompts the user for a player name' do
+          expect_any_instance_of(Object).to receive(:puts).with(/please enter your name/)
+          no_name_player
+        end
+
+        it 'sets the name variable to user input' do
+          player_name = no_name_player.name
+          expect(player_name).to eq(name)
+        end
       end
     end
   end
@@ -390,22 +379,8 @@ describe HumanPlayer do
       end
 
       it 'returns the input' do
-        accept_draw = player.claim_draw?
+        accept_draw = player.accept_draw?
         expect(accept_draw).to eq(input)
-      end
-    end
-  end
-end
-
-describe ComputerPlayer do
-  describe '#initialize' do
-    context 'when the name argument is not provided' do
-      it 'outputs a message with the color of the computer player' do
-        
-      end
-
-      it 'sets the name variable to the string "Computer"' do
-        
       end
     end
   end

@@ -69,21 +69,26 @@ end
 
 class ComputerPlayer < Player
   def select_action(game)
-    display_action_selection
+    puts 'Computer move:'
+    sleep(0.5)
     action = action_options(game).sample
-    display_standard_action(action)
+    display_standard_action(action) unless action == 'castle'
+    enter_to_continue
     action
   end
 
   def select_rook(rooks, *)
     rook = rooks.sample
     display_castle_action(rook)
+    enter_to_continue
     rook
   end
 
   def select_promote_class
     promote_class = [Queen, Bishop, Knight, Rook].sample
-    display_promote_class(promote_class)
+    sleep(0.5)
+    puts "Computer promotes pawn to #{promote_class.name}."
+    enter_to_continue
     promote_class
   end
 
@@ -117,26 +122,11 @@ class ComputerPlayer < Player
     options
   end
 
-  def display_action_selection
-    puts 'Computer move:'
-    sleep(0.5)
-  end
-
   def display_standard_action(action)
-    return if action == 'castle'
-
     puts [from_pos(action.first.position), from_pos(action.last)].join(' to ')
-    enter_to_continue
   end
 
   def display_castle_action(rook)
     puts "Castle king with rook at #{from_pos(rook.position)}"
-    enter_to_continue
-  end
-
-  def display_promote_class(promote_class)
-    sleep(0.5)
-    puts "Computer promotes pawn to #{promote_class.name}."
-    enter_to_continue
   end
 end
