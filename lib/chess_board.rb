@@ -42,12 +42,12 @@ module Board
   end
 
   def fill_displayed_board(displayed_board)
-    @board.each do |piece|
+    board.each do |piece|
       col, row = piece.position
       displayed_board[row][col] =
         if displayed_board[row][col].include?("\e[47m")
-          "\e[47m #{piece.symbol} \e[0m"
-        else "\e[103m #{piece.symbol} \e[0m"
+          "\e[47m\e[30m #{piece.symbol} \e[0m\e[0m"
+        else "\e[103m\e[30m #{piece.symbol} \e[0m\e[0m"
         end
     end
   end
