@@ -36,7 +36,7 @@ class Piece
       last_index = pos_set.index do |pos|
         board.any? { |piece| piece.position == pos }
       end
-      pos_set[0..last_index].reject do |pos|
+      pos_set[0..(last_index || -1)].reject do |pos|
         board.any? { |piece| player?(piece) && piece.position == pos }
       end
     end.flatten(1)

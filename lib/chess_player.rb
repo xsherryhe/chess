@@ -111,13 +111,13 @@ class ComputerPlayer < Player
   end
 
   def action_options(game)
-    options = game.board.filter_map do |piece|
+    options = game.board.map do |piece|
       next if opponent?(piece)
 
       next_position = piece.legal_next_positions(game.board, game.move_num + 1)
                            .sample
       [piece, next_position] if next_position
-    end
+    end.compact
     options << 'castle' if game.can_castle?
     options
   end
