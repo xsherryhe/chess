@@ -7,6 +7,8 @@ describe Game do
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
+    allow(game).to receive(:system)
+    allow(game).to receive(:display_board)
     allow(game).to receive(:puts)
   end
 
@@ -188,9 +190,9 @@ describe Game do
     before do
       allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
       allow(king_to_mate).to receive(:to_yaml).and_return('')
-      allow(game).to receive(:display_board)
       game.instance_variable_set(:@curr_player_index, mated_player_index)
       game.instance_variable_set(:@board, mated_board)
+      allow(game).to receive(:gets).and_return('')
     end
 
     context 'when a player checkmates their opponent' do

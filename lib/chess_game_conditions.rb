@@ -1,12 +1,16 @@
 module GameConditions
   def display_check_state
+    return if @game_over
     return unless check
 
+    display_board
     puts color_message('check') + '. (Press ENTER to continue).'
     gets
   end
 
   def display_draw_claim_state
+    return if @game_over
+
     repetition_of_positions = @history.count(@history.last) >= 3
     fifty_idle_moves = @idle_moves >= 100
     return unless repetition_of_positions || fifty_idle_moves
@@ -72,11 +76,13 @@ module GameConditions
     puts color_message('checkmate') +
          ". #{curr_opponent.name} has won the game!"
     @game_over = true
+    exit_to_main_menu
   end
 
   def display_stalemate
     puts " #{curr_player.color} gets a stalemate. " \
          'The game is a draw.'
     @game_over = true
+    exit_to_main_menu
   end
 end

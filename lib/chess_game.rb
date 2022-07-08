@@ -31,15 +31,15 @@ class Game
 
   def play
     until @game_over
-      display_board
-      display_check_state
       player_action
-      display_draw_claim_state
       display_mate_state
+      display_check_state
+      display_draw_claim_state
     end
   end
 
   def player_action
+    display_board
     pieces = @board.select { |piece| player?(piece) }
     action = valid_input(pieces)
     action =~ /^menu$/i ? game_menu : take_turn(action)

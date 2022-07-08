@@ -1,4 +1,8 @@
+require_relative './chess_enter.rb'
+
 module BaseMethods
+  include PressEnter
+
   private
 
   def player?(piece, player_index = @player_index || @curr_player_index)

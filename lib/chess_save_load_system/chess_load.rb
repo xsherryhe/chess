@@ -9,8 +9,7 @@ module LoadAndDelete
     return unless check_saved_games && (name = existing_save_name('load'))
 
     puts "Game \"#{name}\" successfully loaded!"
-    puts 'Press ENTER to continue.'
-    gets
+    enter_to_continue
     file = "#{save_dir}/#{name}.yaml"
 
     if is_a?(Game)
@@ -44,11 +43,6 @@ module LoadAndDelete
     puts 'You have no saved games.'
     exit_to_menu
     false
-  end
-
-  def exit_to_menu
-    puts 'Press ENTER to return to the menu.'
-    gets
   end
 
   def existing_save_name(action)
