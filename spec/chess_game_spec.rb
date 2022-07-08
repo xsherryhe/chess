@@ -84,8 +84,10 @@ describe Game do
 
     10.times do
       it 'prompts the player for an input to determine their next action' do
-        prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+\(Or enter the word MENU to view other game options\.\)")
+        prompt_reg = Regexp.new("#{curr_player.name}, please enter the square of the piece that you wish to move\..+")
+        menu_reg = /(Or enter the word MENU to view other game options\.)/
         expect(game).to receive(:puts).with(prompt_reg)
+        expect(game).to receive(:puts).with(menu_reg)
         game.player_action
       end
     end
