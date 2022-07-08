@@ -1,4 +1,8 @@
+require_relative '../chess_enter.rb'
+
 module SaveLoadBaseMethods
+  include PressEnter
+
   private
 
   def save_dir

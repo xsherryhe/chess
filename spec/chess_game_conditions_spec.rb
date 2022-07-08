@@ -1,13 +1,16 @@
 require_relative '../lib/chess_game.rb'
 describe Game do
   subject(:game) { described_class.new }
-  let(:white_player) { instance_double(Player, name: 'Foo', player_index: 0, color: 'White') }
-  let(:black_player) { instance_double(Player, name: 'Bar', player_index: 1, color: 'Black') }
+  let(:white_player) { instance_double(HumanPlayer, name: 'Foo', player_index: 0, color: 'White') }
+  let(:black_player) { instance_double(HumanPlayer, name: 'Bar', player_index: 1, color: 'Black') }
   let(:board) { game.instance_variable_get(:@board) }
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
+    allow(game).to receive(:system)
+    allow(game).to receive(:display_board)
     allow(game).to receive(:puts)
+    allow(game).to receive(:gets).and_return('')
   end
 
   describe '#display_check_state' do
@@ -26,7 +29,6 @@ describe Game do
       allow(king_to_check).to receive(:to_yaml).and_return('')
       game.instance_variable_set(:@curr_player_index, checked_player_index)
       game.instance_variable_set(:@board, checked_board)
-      allow(game).to receive(:gets).and_return('')
     end
 
     context 'when a player checks their opponent' do
@@ -51,14 +53,17 @@ describe Game do
   end
 
   describe '#display_draw_claim_state' do
+    let(:curr_player_index) { rand(2) }
+    let(:curr_player) { [white_player, black_player][curr_player_index] }
     let(:game_history_position) do
       Array.new(rand(50)) { (('A'..'Z').to_a + ('a'..'z').to_a).sample }.join
     end
 
     before do
+      game.instance_variable_set(:@curr_player_index, curr_player_index)
       game.instance_variable_set(:@history, [game_history_position] * rand(5))
       game.instance_variable_set(:@idle_moves, rand(200))
-      allow(game).to receive(:gets).and_return(%w[YES yes Y y].sample)
+      allow(curr_player).to receive(:claim_draw?).and_return(%w[YES yes Y y].sample)
     end
 
     context 'when the game history includes a repetition of positions at least three times' do
@@ -67,14 +72,13 @@ describe Game do
       end
 
       10.times do
-        it 'displays a repetition of positions message and prompts the user to claim a draw' do
+        it 'displays a repetition of positions message' do
           expect(game).to receive(:puts).with(/The same position with the same player to move has been repeated at least 3 times in the game/)
-          expect(game).to receive(:puts).with(/do you wish to claim a draw\?/)
           game.display_draw_claim_state
         end
       end
 
-      context 'when the user confirms that they wish to claim a draw' do
+      context 'when the player confirms that they wish to claim a draw' do
         10.times do
           it 'outputs a draw message' do
             expect(game).to receive(:puts).with('The game ends in a draw.')
@@ -89,9 +93,9 @@ describe Game do
         end
       end
 
-      context 'when the user does not confirm that they wish to claim a draw' do
+      context 'when the player does not confirm that they wish to claim a draw' do
         before do
-          allow(game).to receive(:gets).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
+          allow(curr_player).to receive(:claim_draw?).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
         end
 
         10.times do
@@ -115,14 +119,13 @@ describe Game do
       end
 
       10.times do
-        it 'displays a 50 moves message and prompts the user to claim a draw' do
+        it 'displays a 50 moves message' do
           expect(game).to receive(:puts).with(/there have been 50 consecutive moves of both players without any piece taken or any pawn move/i)
-          expect(game).to receive(:puts).with(/do you wish to claim a draw\?/)
           game.display_draw_claim_state
         end
       end
 
-      context 'when the user confirms that they wish to claim a draw' do
+      context 'when the player confirms that they wish to claim a draw' do
         10.times do
           it 'outputs a draw message' do
             expect(game).to receive(:puts).with('The game ends in a draw.')
@@ -137,9 +140,9 @@ describe Game do
         end
       end
 
-      context 'when the user does not confirm that they wish to claim a draw' do
+      context 'when the player does not confirm that they wish to claim a draw' do
         before do
-          allow(game).to receive(:gets).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
+          allow(curr_player).to receive(:claim_draw?).and_return(['n', 'N', 'no', 'NO', 'yesterday', ''].sample)
         end
 
         10.times do
@@ -164,9 +167,15 @@ describe Game do
       end
 
       10.times do
-        it 'does not prompt the user to claim a draw' do
-          expect(game).not_to receive(:puts).with(/do you wish to claim a draw\?/)
+        it 'does not output a draw claim message' do
+          expect(game).not_to receive(:puts)
           game.display_draw_claim_state
+        end
+
+        it 'does not end the game' do
+          game.display_draw_claim_state
+          game_over = game.instance_variable_get(:@game_over)
+          expect(game_over).not_to be true
         end
       end
     end
@@ -188,7 +197,6 @@ describe Game do
     before do
       allow(king_to_mate).to receive(:is_a?).with(King).and_return(true)
       allow(king_to_mate).to receive(:to_yaml).and_return('')
-      allow(game).to receive(:display_board)
       game.instance_variable_set(:@curr_player_index, mated_player_index)
       game.instance_variable_set(:@board, mated_board)
     end

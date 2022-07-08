@@ -1,4 +1,8 @@
+require_relative './chess_enter.rb'
+
 module BaseMethods
+  include PressEnter
+
   private
 
   def player?(piece, player_index = @player_index || @curr_player_index)
@@ -33,5 +37,9 @@ module BaseMethods
     col, row = input.upcase.chars
     pos = [col.ord - 65, row.to_i - 1]
     pos.all? { |dir| dir.between?(0, 7) } ? pos : nil
+  end
+
+  def from_pos(pos)
+    ('A'..'H').to_a[pos.first] + (pos.last + 1).to_s
   end
 end
