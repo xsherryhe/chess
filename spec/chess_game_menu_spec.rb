@@ -10,6 +10,7 @@ describe Game do
 
   before do
     allow(Player).to receive(:new).and_return(white_player, black_player)
+    allow(game).to receive(:system)
     allow(game).to receive(:puts)
   end
 

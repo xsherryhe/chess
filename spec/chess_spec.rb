@@ -23,6 +23,7 @@ describe Chess do
       allow(Chess).to receive(:save_dir).and_return(mock_save_dir)
       allow(Chess).to receive(:save_record).and_return(mock_save_record)
       allow(Chess).to receive(:puts)
+      allow(Chess).to receive(:system)
       allow(game).to receive(:play)
     end
 
@@ -290,7 +291,7 @@ describe Chess do
             end
 
             context 'while deleting additional save files is confirmed' do
-              let(:extra_delete_count) { rand(20) }
+              let(:extra_delete_count) { rand(19) }
               let(:all_existing_save_names) do
                 (0...20).to_a.product(%w[A a]).map(&:join)
               end
@@ -511,7 +512,7 @@ describe Chess do
           invalid_inputs = ["I don't know", 'menu', '20', 'b', '[0, 1]', ':help', '(']
           allow(Chess).to receive(:gets) do
             call_count += 1
-            call_count == invalid_count + 1 ?  %w[exit EXIT 6].sample : invalid_inputs.sample
+            call_count == invalid_count + 1 ? %w[exit EXIT 6].sample : invalid_inputs.sample
           end
           expect(Chess).to receive(:puts).with('Invalid input!').exactly(invalid_count).times
           Chess.run

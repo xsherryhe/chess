@@ -33,15 +33,15 @@ class Game
 
   def play
     until @game_over
-      display_board
-      display_check_state
       player_action
-      display_draw_claim_state
       display_mate_state
+      display_check_state
+      display_draw_claim_state
     end
   end
 
   def player_action
+    display_board
     action = curr_player.select_action(self)
 
     if action.is_a?(String)

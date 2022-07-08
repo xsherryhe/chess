@@ -1,12 +1,16 @@
 module GameConditions
   def display_check_state
+    return if @game_over
     return unless check
 
+    display_board
     puts color_message('check') + '. (Press ENTER to continue).'
     gets
   end
 
   def display_draw_claim_state
+    return if @game_over
+
     repetition = repetition_of_positions?
     idle_moves = fifty_idle_moves?
     return unless repetition || idle_moves
@@ -80,10 +84,5 @@ module GameConditions
          'The game is a draw.'
     @game_over = true
     exit_to_main_menu
-  end
-
-  def exit_to_main_menu
-    puts 'Press ENTER to return to the main menu.'
-    gets
   end
 end

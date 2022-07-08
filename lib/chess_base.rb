@@ -1,4 +1,8 @@
+require_relative './chess_enter.rb'
+
 module BaseMethods
+  include PressEnter
+
   private
 
   def player?(piece, player_index = @player_index || @curr_player_index)
@@ -37,10 +41,5 @@ module BaseMethods
 
   def from_pos(pos)
     ('A'..'H').to_a[pos.first] + (pos.last + 1).to_s
-  end
-
-  def enter_to_continue
-    puts 'Press ENTER to continue.'
-    gets
   end
 end

@@ -94,7 +94,6 @@ describe Game do
       it 'does not execute the loop' do
         allow(game).to receive(:display_mate_state)
         game.instance_variable_set(:@game_over, true)
-        expect(game).not_to receive(:display_board)
         expect(game).not_to receive(:display_check_state)
         expect(game).not_to receive(:player_action)
         expect(game).not_to receive(:display_mate_state)
@@ -111,7 +110,6 @@ describe Game do
             call_count += 1
             game.instance_variable_set(:@game_over, true) if call_count == loops
           end
-          expect(game).to receive(:display_board).exactly(loops).times
           expect(game).to receive(:display_check_state).exactly(loops).times
           expect(game).to receive(:player_action).exactly(loops).times
           expect(game).to receive(:display_mate_state).exactly(loops).times
